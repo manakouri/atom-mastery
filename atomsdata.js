@@ -88,7 +88,9 @@ export const master_atoms = [
     title: "The 10 Symbols",
     description: "Recognizing that 0-9 are the building blocks of all numbers.",
     misconceptions: ["Confusing digit value with position"],
-    retrieval_questions: [{ q: "What digits make up our number system?", a: "0–9" }]
+    retrieval_pool: [
+    { q: "What digits make up our number system?", a: "0–9" },
+  ]
   },
   {
     atom_id: "TT-1.1",
@@ -96,7 +98,9 @@ export const master_atoms = [
     title: "Equal Groups",
     description: "Identifying groups with the same quantity.",
     misconceptions: ["Treating unequal groups as equal"],
-    retrieval_questions: [{ q: "Are these two groups equal?", a: "Compare counts of each group." }]
+    retrieval_pool: [
+    { q: "Are these two groups equal?", a: "Compare counts of each group." },
+  ]
   },
   {
     atom_id: "PV-1.3",
@@ -104,7 +108,9 @@ export const master_atoms = [
     title: "Zero as Placeholder",
     description: "Using 0 to hold a place so digits maintain their value (e.g., 10 vs 1).",
     misconceptions: ["Thinking 0 means nothing at all"],
-    retrieval_questions: [{ q: "What does the zero do in 10?", a: "It holds the ones place so the 1 represents ten." }]
+    retrieval_pool: [
+    { q: "What does the zero do in 10?", a: "It holds the ones place so the 1 represents ten." },
+  ]
   },
   {
     atom_id: "TT-1.2",
@@ -112,7 +118,9 @@ export const master_atoms = [
     title: "Repeated Addition",
     description: "Seeing 2+2+2 as 3 groups of 2.",
     misconceptions: ["Adding the wrong number of groups"],
-    retrieval_questions: [{ q: "Write 2 + 2 + 2 as a multiplication.", a: "3 × 2" }]
+    retrieval_pool: [
+    { q: "Write 2 + 2 + 2 as a multiplication.", a: "3 × 2" },
+  ]
   },
   {
     atom_id: "PV-1.4",
@@ -120,7 +128,9 @@ export const master_atoms = [
     title: "Unitizing Tens",
     description: "Understanding that 10 ones is the same as 1 ten.",
     misconceptions: ["Seeing a ten as just 10 separate ones"],
-    retrieval_questions: [{ q: "What is 10 ones equal to?", a: "1 ten" }]
+    retrieval_pool: [
+    { q: "What is 10 ones equal to?", a: "1 ten" },
+  ]
   },
   {
     atom_id: "TT-1.4",
@@ -128,7 +138,9 @@ export const master_atoms = [
     title: "The Array",
     description: "Organizing items into rows and columns.",
     misconceptions: ["Confusing rows with columns"],
-    retrieval_questions: [{ q: "How many items in a 3×4 array?", a: "12" }]
+    retrieval_pool: [
+    { q: "How many items in a 3×4 array?", a: "12" },
+  ]
   },
   {
     atom_id: "PV-1.5",
@@ -136,7 +148,9 @@ export const master_atoms = [
     title: "Counting 10s",
     description: "Fluency in skip counting by 10.",
     misconceptions: ["Losing track after 90"],
-    retrieval_questions: [{ q: "What comes after 70, 80?", a: "90" }]
+    retrieval_pool: [
+    { q: "What comes after 70, 80?", a: "90" },
+  ]
   },
   {
     atom_id: "TT-1.5",
@@ -144,7 +158,9 @@ export const master_atoms = [
     title: "10x Table",
     description: "The 'moving digits' rule for 10x.",
     misconceptions: ["Just 'adding a zero' without understanding place value"],
-    retrieval_questions: [{ q: "What is 10 × 6?", a: "60" }]
+    retrieval_pool: [
+    { q: "What is 10 × 6?", a: "60" },
+  ]
   },
   {
     atom_id: "PV-1.2",
