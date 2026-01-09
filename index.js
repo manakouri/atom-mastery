@@ -18,7 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// COMPONENT: Retrieval Overlay
+// COMPONENT: Retrieval Overlay (Fullscreen Question View)
 const RetrievalScreen = ({ questions, onClose }) => {
   const [idx, setIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -73,7 +73,6 @@ function App() {
     fetchSessions();
   }, []);
 
-  // THE UPDATED RETRIEVAL LOGIC
   const startRetrieval = async () => {
     const mastered = sessions.filter(s => s.status === 'green');
     if (mastered.length < 1) return alert("Mark sessions as 'Mastery' to begin retrieval.");
@@ -82,7 +81,6 @@ function App() {
     const targets = [n - 1, n - 1, n - 3, n - 7, n - 14];
     const finalQuestions = [];
     
-    // Pool for gap filling
     let fullPool = [];
     mastered.forEach(s => s.atoms?.forEach(a => fullPool.push({ atomId: a, sessionId: s.session_id })));
 
@@ -95,7 +93,6 @@ function App() {
       return null;
     };
 
-    // 1. Try targets
     for (const t of targets) {
       if (t <= 0) continue;
       const matches = mastered.filter(s => s.session_id === t);
@@ -106,7 +103,6 @@ function App() {
       }
     }
 
-    // 2. Fill gaps to reach 5
     while (finalQuestions.length < 5 && fullPool.length > 0) {
       const pick = fullPool[Math.floor(Math.random() * fullPool.length)];
       if (finalQuestions.some(q => q.atomId === pick.atomId)) {
@@ -150,10 +146,15 @@ function App() {
     setTimeout(() => setIsSaving(false), 800);
   };
 
-  const progress = sessions.length > 0 ? Math.round((sessions.filter(s => s.status === 'green').length / sessions.length) * 100) : 0;
-  const filtered = sessions.filter(s => s.title.toLowerCase().includes(searchTerm.toLowerCase()) || s.strand.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Grouping Logic for the Roadmap
+  const filtered = sessions.filter(s => 
+    s.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.strand.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const strands = [...new Set(sessions.map(s => s.strand))];
 
-  if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Loading Engine...</div>;
+  if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Loading Unified Roadmap...</div>;
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20 font-sans text-slate-900">
@@ -162,39 +163,44 @@ function App() {
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-6">
         <div className="max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h1 className="text-xl font-black italic tracking-tighter uppercase">Roadmap</h1>
-                  <div className="h-1.5 w-full bg-slate-100 mt-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
-                  </div>
-                </div>
+                <h1 className="text-xl font-black italic tracking-tighter uppercase">Mastery Roadmap</h1>
                 <button onClick={startRetrieval} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-5 py-3 rounded-2xl transition-all uppercase tracking-widest shadow-lg shadow-blue-100">Daily Retrieval</button>
             </div>
             <div className="relative">
-                <input type="text" placeholder="Search strands or sessions..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-100 border-none rounded-2xl py-3.5 px-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                <input type="text" placeholder="Search roadmap..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-100 border-none rounded-2xl py-3.5 px-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
                 <span className="absolute left-4 top-3.5">🔍</span>
             </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto pt-8 px-4 space-y-3">
-        {filtered.map(s => (
-          <div key={s.id} onClick={() => handleSessionClick(s)} className="bg-white p-5 rounded-3xl border border-slate-200 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between group shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${s.status === 'green' ? 'bg-green-600 text-white' : s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{s.session_id}</div>
-              <div>
-                <div className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">{s.strand}</div>
-                <h3 className="font-bold text-slate-800 leading-tight">{s.title}</h3>
-              </div>
-            </div>
-            <div className={`w-2.5 h-2.5 rounded-full ${s.status === 'green' ? 'bg-green-500' : s.status === 'amber' ? 'bg-amber-500' : 'bg-slate-200'}`}></div>
-          </div>
-        ))}
+      <div className="max-w-2xl mx-auto pt-8 px-4 space-y-12">
+        {strands.map(strandName => {
+            const strandSessions = filtered.filter(s => s.strand === strandName);
+            if (strandSessions.length === 0) return null;
+            
+            return (
+                <div key={strandName} className="space-y-4">
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-2">{strandName}</h2>
+                    <div className="space-y-3">
+                        {strandSessions.map(s => (
+                            <div key={s.id} onClick={() => handleSessionClick(s)} className="bg-white p-5 rounded-3xl border border-slate-200 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between group shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${s.status === 'green' ? 'bg-green-600 text-white' : s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{s.session_id}</div>
+                                    <h3 className="font-bold text-slate-800 leading-tight">{s.title}</h3>
+                                </div>
+                                <div className={`w-2.5 h-2.5 rounded-full ${s.status === 'green' ? 'bg-green-500' : s.status === 'amber' ? 'bg-amber-500' : 'bg-slate-200'}`}></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        })}
       </div>
 
+      {/* SESSION DRAWER */}
       {selectedSession && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
             <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
               <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-black uppercase tracking-tighter">✕ Close</button>
               <div className="flex gap-2">
@@ -211,7 +217,6 @@ function App() {
                 <p className="text-slate-500 font-medium italic">{selectedSession.li}</p>
               </section>
 
-              {/* PLANNING SECTION RESTORED */}
               <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
                 <div className="flex justify-between items-center mb-4">
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Teacher Planning</h4>
@@ -219,12 +224,7 @@ function App() {
                         {isSaving ? '✓ Saved' : 'Save Notes'}
                     </button>
                 </div>
-                <textarea 
-                    value={planningText} 
-                    onChange={(e) => setPlanningText(e.target.value)} 
-                    placeholder="Add focus groups, lesson links, or notes..." 
-                    className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 h-40 focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm" 
-                />
+                <textarea value={planningText} onChange={(e) => setPlanningText(e.target.value)} placeholder="Lesson notes..." className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 h-40 focus:ring-2 focus:ring-blue-500 outline-none" />
               </section>
 
               <section className="space-y-6">
