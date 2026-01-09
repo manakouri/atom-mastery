@@ -1,175 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maths Mastery Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maths Mastery Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar for a cleaner UI */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0",
+        "react-dom": "https://esm.sh/react-dom@19.0.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+        "firebase/app": "https://esm.sh/firebase@10.13.2/app",
+        "firebase/firestore": "https://esm.sh/firebase@10.13.2/firestore"
+      }
+    }
+    </script>
 </head>
-<body>
-  <div id="root"></div>
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
+    
+    <div id="root"></div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-    import { getFirestore, collection, doc, setDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+    <script type="module" src="./index.js"></script>
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyB5L2VJahLNK76xWxC7MjsGbbcf70HjARs",
-      authDomain: "number-knowledge-71dba.firebaseapp.com",
-      projectId: "number-knowledge-71dba",
-      storageBucket: "number-knowledge-71dba.firebasestorage.app",
-      messagingSenderId: "931772776390",
-      appId: "1:931772776390:web:e6fddd88629bcf1d803cc7",
-      measurementId: "G-QQ34HTK4CE"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Make Firebase available globally
-    window.firebaseDb = db;
-    window.firebaseDoc = doc;
-    window.firebaseSetDoc = setDoc;
-    window.firebaseGetDocs = getDocs;
-    window.firebaseCollection = collection;
-
-    // Data embedded directly
-    window.master_sessions = [
-      { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognize 0-9 build all numbers.", atoms: ["PV-1.1"], status: "grey", notes: "" },
-      { session_id: 1, strand: "times_tables", title: "Equal Groups", li: "Identify equal vs unequal groups.", atoms: ["TT-1.1"], status: "grey", notes: "" },
-      { session_id: 2, strand: "place_value", title: "Zero as Placeholder", li: "Use 0 to hold a place in 10, 20, etc.", atoms: ["PV-1.3"], status: "grey", notes: "" },
-      { session_id: 2, strand: "times_tables", title: "Repeated Addition", li: "Write addition as multiplication.", atoms: ["TT-1.2"], status: "grey", notes: "" },
-      { session_id: 3, strand: "place_value", title: "Unitizing Tens", li: "Bundle 10 ones into 1 ten.", atoms: ["PV-1.4"], status: "grey", notes: "" },
-      { session_id: 3, strand: "times_tables", title: "The Array", li: "Represent multiplication as a grid.", atoms: ["TT-1.4"], status: "grey", notes: "" },
-      { session_id: 4, strand: "place_value", title: "Counting 10s", li: "Count fluently in tens to 100.", atoms: ["PV-1.5"], status: "grey", notes: "" },
-      { session_id: 4, strand: "times_tables", title: "10x Table", li: "Master the 10s using the '0' rule.", atoms: ["TT-1.5"], status: "grey", notes: "" },
-      { session_id: 5, strand: "place_value", title: "2-Digit Composition", li: "Partition numbers into Tens and Ones.", atoms: ["PV-1.2"], status: "grey", notes: "" },
-      { session_id: 5, strand: "times_tables", title: "5x Table", li: "Connect 5s to the clock and 10s.", atoms: ["TT-1.6"], status: "grey", notes: "" },
-      { session_id: 6, strand: "place_value", title: "Number Lines to 100", li: "Place 2-digit numbers on a line.", atoms: ["PV-1.6"], status: "grey", notes: "" },
-      { session_id: 6, strand: "times_tables", title: "2x Table", li: "Understand doubling as 2x.", atoms: ["TT-1.7"], status: "grey", notes: "" },
-      { session_id: 7, strand: "place_value", title: "Phase 1 Review", li: "Review 2-digit PV and 2,5,10 tables.", atoms: ["PV-1.1", "TT-1.7"], status: "grey", notes: "" },
-      { session_id: 7, strand: "times_tables", title: "Knowledge Test 1", li: "Test retrieval of Phase 1.", atoms: ["TT-1.5", "TT-1.6", "TT-1.7"], status: "grey", notes: "" },
-      { session_id: 8, strand: "place_value", title: "The Hundred Flat", li: "10 tens make 1 hundred.", atoms: ["PV-2.1"], status: "grey", notes: "" },
-      { session_id: 8, strand: "times_tables", title: "Commutativity", li: "Understand 5x2 is the same as 2x5.", atoms: ["TT-2.1"], status: "grey", notes: "" },
-      { session_id: 9, strand: "place_value", title: "3-Digit Composition", li: "Build H, T, and O.", atoms: ["PV-2.2"], status: "grey", notes: "" },
-      { session_id: 9, strand: "times_tables", title: "3x Table Intro", li: "Skip count in 3s fluently.", atoms: ["TT-2.2"], status: "grey", notes: "" },
-      { session_id: 10, strand: "place_value", title: "Crossing 100", li: "Bridge the 100 barrier (99 to 101).", atoms: ["PV-2.3"], status: "grey", notes: "" },
-      { session_id: 10, strand: "times_tables", title: "3x Table Patterns", li: "Identify even/odd patterns in 3s.", atoms: ["TT-2.3"], status: "grey", notes: "" },
-      { session_id: 11, strand: "place_value", title: "Midpoints to 100", li: "Find 50 as the halfway mark.", atoms: ["PV-2.4"], status: "grey", notes: "" },
-      { session_id: 11, strand: "times_tables", title: "3x Fluency", li: "Rapid recall of 3x table.", atoms: ["TT-2.4"], status: "grey", notes: "" },
-      { session_id: 12, strand: "place_value", title: "Internal Zeros", li: "Write numbers like 104 and 308.", atoms: ["PV-2.5"], status: "grey", notes: "" },
-      { session_id: 12, strand: "times_tables", title: "Inverse Intro", li: "Understand division as the opposite.", atoms: ["TT-2.5"], status: "grey", notes: "" },
-      { session_id: 13, strand: "place_value", title: "Magnitude", li: "Compare 3-digit numbers using < >.", atoms: ["PV-2.6"], status: "grey", notes: "" },
-      { session_id: 13, strand: "times_tables", title: "Fact Families", li: "Relate 3, 4, and 12 together.", atoms: ["TT-2.6"], status: "grey", notes: "" },
-      { session_id: 14, strand: "place_value", title: "Phase 2 Review", li: "Review 3-digit PV and 3s.", atoms: ["PV-2.1", "PV-2.5"], status: "grey", notes: "" },
-      { session_id: 14, strand: "times_tables", title: "Knowledge Test 2", li: "Test retrieval of Phase 2.", atoms: ["TT-2.4", "TT-2.5"], status: "grey", notes: "" },
-      { session_id: 15, strand: "place_value", title: "The Thousand Cube", li: "10 hundreds make 1 thousand.", atoms: ["PV-3.1"], status: "grey", notes: "" },
-      { session_id: 15, strand: "times_tables", title: "The Double-Double", li: "Double 2s to find 4s.", atoms: ["TT-3.1"], status: "grey", notes: "" },
-      { session_id: 16, strand: "place_value", title: "4-Digit Reading", li: "Read thousands with commas.", atoms: ["PV-3.2"], status: "grey", notes: "" },
-      { session_id: 16, strand: "times_tables", title: "4x Table Practice", li: "Fluency with 4x table.", atoms: ["TT-3.2"], status: "grey", notes: "" },
-      { session_id: 17, strand: "place_value", title: "Midpoints to 1000", li: "Find 500 as the halfway mark.", atoms: ["PV-3.3"], status: "grey", notes: "" },
-      { session_id: 17, strand: "times_tables", title: "Doubling 4s to 8s", li: "Double 4s to find 8s.", atoms: ["TT-3.3"], status: "grey", notes: "" },
-      { session_id: 18, strand: "place_value", title: "Rounding to 10", li: "Use midpoints to round to 10.", atoms: ["PV-3.4"], status: "grey", notes: "" },
-      { session_id: 18, strand: "times_tables", title: "8x Table Mastery", li: "Recall 8x facts using doubling.", atoms: ["TT-3.4"], status: "grey", notes: "" },
-      { session_id: 19, strand: "place_value", title: "Rounding to 100", li: "Use midpoints to round to 100.", atoms: ["PV-3.5"], status: "grey", notes: "" },
-      { session_id: 19, strand: "times_tables", title: "Sharing vs Grouping", li: "Distinguish two types of division.", atoms: ["TT-3.5"], status: "grey", notes: "" },
-      { session_id: 20, strand: "place_value", title: "Round & Estimate", li: "Use rounding to check answers.", atoms: ["PV-3.6"], status: "grey", notes: "" },
-      { session_id: 20, strand: "times_tables", title: "Division Inverse", li: "Solve 32 ÷ 8 using 8x4.", atoms: ["TT-3.6"], status: "grey", notes: "" },
-      { session_id: 21, strand: "place_value", title: "Phase 3 Review", li: "Review thousands and 4s/8s.", atoms: ["PV-3.2", "TT-3.3"], status: "grey", notes: "" },
-      { session_id: 21, strand: "times_tables", title: "Knowledge Test 3", li: "Test retrieval of Phase 3.", atoms: ["TT-3.4", "TT-3.6"], status: "grey", notes: "" },
-      { session_id: 22, strand: "place_value", title: "10,000 Threshold", li: "10 thousands make 1 ten-thousand.", atoms: ["PV-4.1"], status: "grey", notes: "" },
-      { session_id: 22, strand: "times_tables", title: "Double-3 Strategy", li: "Double 3s to find 6s.", atoms: ["TT-4.1"], status: "grey", notes: "" },
-      { session_id: 23, strand: "place_value", title: "5-Digit Composition", li: "Read and write up to 99,999.", atoms: ["PV-4.2"], status: "grey", notes: "" },
-      { session_id: 23, strand: "times_tables", title: "6x Table Fluency", li: "Practice recall of 6x facts.", atoms: ["TT-4.2"], status: "grey", notes: "" },
-      { session_id: 24, strand: "place_value", title: "Rounding to 1,000", li: "Round 4- and 5-digit numbers to nearest 1,000.", atoms: ["PV-4.3"], status: "grey", notes: "" },
-      { session_id: 24, strand: "times_tables", title: "10 minus 1 (9s)", li: "Find 9x by (10x - 1x).", atoms: ["TT-4.3"], status: "grey", notes: "" },
-      { session_id: 25, strand: "place_value", title: "Placeholder Zeros", li: "Compare 50,200 vs 5,020.", atoms: ["PV-4.4"], status: "grey", notes: "" },
-      { session_id: 25, strand: "times_tables", title: "9x Table Patterns", li: "Digital roots of 9s.", atoms: ["TT-4.4"], status: "grey", notes: "" },
-      { session_id: 26, strand: "place_value", title: "Scaling Rounding", li: "Round 12,450 to 10, 100, 1000.", atoms: ["PV-4.5"], status: "grey", notes: "" },
-      { session_id: 26, strand: "times_tables", title: "Distributive Intro", li: "Break 7x into 5x and 2x.", atoms: ["TT-4.5"], status: "grey", notes: "" },
-      { session_id: 27, strand: "place_value", title: "Comparing Magnitude", li: "Order 5-digit numbers.", atoms: ["PV-4.6"], status: "grey", notes: "" },
-      { session_id: 27, strand: "times_tables", title: "7x Table Mastery", li: "Use 5s+2s to solve 7s.", atoms: ["TT-4.6"], status: "grey", notes: "" },
-      { session_id: 28, strand: "place_value", title: "Phase 4 Review", li: "Review 10k and 6,7,9 tables.", atoms: ["PV-4.2", "TT-4.5"], status: "grey", notes: "" },
-      { session_id: 28, strand: "times_tables", title: "Knowledge Test 4", li: "Test retrieval of Phase 4.", atoms: ["TT-4.2", "TT-4.6"], status: "grey", notes: "" },
-      { session_id: 29, strand: "place_value", title: "100,000 Unit", li: "Understand 10 groups of 10,000.", atoms: ["PV-5.1"], status: "grey", notes: "" },
-      { session_id: 29, strand: "times_tables", title: "10 + 1 (11s)", li: "Master 11s using 10x plus 1x.", atoms: ["TT-5.1"], status: "grey", notes: "" },
-      { session_id: 30, strand: "place_value", title: "The Million", li: "Identify 1,000,000 as a landmark.", atoms: ["PV-5.2"], status: "grey", notes: "" },
-      { session_id: 30, strand: "times_tables", title: "11x Mastery", li: "Recall 11x facts beyond 100.", atoms: ["TT-5.2"], status: "grey", notes: "" },
-      { session_id: 31, strand: "place_value", title: "6-Digit Reading", li: "Read numbers with two commas.", atoms: ["PV-5.3"], status: "grey", notes: "" },
-      { session_id: 31, strand: "times_tables", title: "10 + 2 (12s)", li: "Master 12s using 10x plus 2x.", atoms: ["TT-5.3"], status: "grey", notes: "" },
-      { session_id: 32, strand: "place_value", title: "Rounding to 100,000", li: "Use the 50,000 midpoint.", atoms: ["PV-5.4"], status: "grey", notes: "" },
-      { session_id: 32, strand: "times_tables", title: "12x Fluency", li: "Rapid recall of 12x facts.", atoms: ["TT-5.4"], status: "grey", notes: "" },
-      { session_id: 33, strand: "place_value", title: "Order to 1,000,000", li: "Compare and order 6-digit numbers.", atoms: ["PV-5.5"], status: "grey", notes: "" },
-      { session_id: 33, strand: "times_tables", title: "Zero Product Law", li: "Understand n x 0 is always 0.", atoms: ["TT-5.5"], status: "grey", notes: "" },
-      { session_id: 34, strand: "place_value", title: "Full System Review", li: "Review Ones to Millions.", atoms: ["PV-5.1", "PV-5.2"], status: "grey", notes: "" },
-      { session_id: 34, strand: "times_tables", title: "Distributive Mastery", li: "Apply strategy to 14x, 15x, etc.", atoms: ["TT-5.6"], status: "grey", notes: "" },
-      { session_id: 35, strand: "place_value", title: "Final Review", li: "Cumulative PV Review.", atoms: ["PV-5.3"], status: "grey", notes: "" },
-      { session_id: 35, strand: "times_tables", title: "Knowledge Test 5", li: "Final 12x12 Mastery Test.", atoms: ["TT-5.4", "TT-5.6"], status: "grey", notes: "" }
-    ];
-
-    window.master_atoms = [
-      { atom_id: "PV-1.1", strand: "place_value", title: "The 10 Symbols", description: "Recognizing that 0-9 are the building blocks of all numbers.", misconceptions: ["Confusing digit value with position"], retrieval_questions: [{ q: "What digits make up our number system?", a: "0–9" }] },
-      { atom_id: "TT-1.1", strand: "times_tables", title: "Equal Groups", description: "Identifying groups with the same quantity.", misconceptions: ["Treating unequal groups as equal"], retrieval_questions: [{ q: "Are these two groups equal?", a: "Compare counts of each group." }] },
-      { atom_id: "PV-1.3", strand: "place_value", title: "Zero as Placeholder", description: "Using 0 to hold a place so digits maintain their value (e.g., 10 vs 1).", misconceptions: ["Thinking 0 means nothing at all"], retrieval_questions: [{ q: "What does the zero do in 10?", a: "It holds the ones place so the 1 represents ten." }] },
-      { atom_id: "TT-1.2", strand: "times_tables", title: "Repeated Addition", description: "Seeing 2+2+2 as 3 groups of 2.", misconceptions: ["Adding the wrong number of groups"], retrieval_questions: [{ q: "Write 2 + 2 + 2 as a multiplication.", a: "3 × 2" }] },
-      { atom_id: "PV-1.4", strand: "place_value", title: "Unitizing Tens", description: "Understanding that 10 ones is the same as 1 ten.", misconceptions: ["Seeing a ten as just 10 separate ones"], retrieval_questions: [{ q: "What is 10 ones equal to?", a: "1 ten" }] },
-      { atom_id: "TT-1.4", strand: "times_tables", title: "The Array", description: "Organizing items into rows and columns.", misconceptions: ["Confusing rows with columns"], retrieval_questions: [{ q: "How many items in a 3×4 array?", a: "12" }] },
-      { atom_id: "PV-1.5", strand: "place_value", title: "Counting 10s", description: "Fluency in skip counting by 10.", misconceptions: ["Losing track after 90"], retrieval_questions: [{ q: "What comes after 70, 80?", a: "90" }] },
-      { atom_id: "TT-1.5", strand: "times_tables", title: "10x Table", description: "The 'moving digits' rule for 10x.", misconceptions: ["Just 'adding a zero' without understanding place value"], retrieval_questions: [{ q: "What is 10 × 6?", a: "60" }] },
-      { atom_id: "PV-1.2", strand: "place_value", title: "2-Digit Composition", description: "Breaking 24 into 20 and 4.", misconceptions: ["Thinking 24 is 2 and 4"], retrieval_questions: [{ q: "In 45, what are the tens and ones?", a: "4 tens and 5 ones" }] },
-      { atom_id: "TT-1.6", strand: "times_tables", title: "5x Table", description: "Connecting 5s to 10s (half of 10).", misconceptions: ["Confusing 5s with 2s"], retrieval_questions: [{ q: "What is 5 × 4?", a: "20" }] },
-      { atom_id: "PV-1.6", strand: "place_value", title: "Number Lines to 100", description: "Estimating position on a 0-100 line.", misconceptions: ["Clumping numbers at one end"], retrieval_questions: [{ q: "Place 37 on a 0–100 number line; is it left or right of 50?", a: "Left of 50" }] },
-      { atom_id: "TT-1.7", strand: "times_tables", title: "2x Table", description: "Multiplication as doubling.", misconceptions: ["Confusing doubling with adding 2"], retrieval_questions: [{ q: "What is 2 × 7?", a: "14" }] },
-      { atom_id: "PV-2.1", strand: "place_value", title: "The Hundred Flat", description: "Recognizing 100 as a unit of 10 tens.", misconceptions: ["Not seeing 100 as a single bundle"], retrieval_questions: [{ q: "How many tens are in 100?", a: "10 tens" }] },
-      { atom_id: "TT-2.1", strand: "times_tables", title: "Commutativity", description: "Factors can switch order (a × b = b × a).", misconceptions: ["Thinking 2×5 is different from 5×2"], retrieval_questions: [{ q: "Is 3 × 4 the same as 4 × 3?", a: "Yes" }] },
-      { atom_id: "PV-2.2", strand: "place_value", title: "3-Digit Composition", description: "Standard form of H, T, O (hundreds, tens, ones).", misconceptions: ["Writing digits in the wrong order"], retrieval_questions: [{ q: "Write one hundred twenty three in digits.", a: "123" }] },
-      { atom_id: "TT-2.2", strand: "times_tables", title: "3x Table Intro", description: "Skip counting in 3s.", misconceptions: ["Skipping numbers in the sequence"], retrieval_questions: [{ q: "What is 3 × 5?", a: "15" }] },
-      { atom_id: "PV-2.3", strand: "place_value", title: "Crossing 100", description: "Counting across the 100 threshold.", misconceptions: ["Saying 'one hundred and ten-one'"], retrieval_questions: [{ q: "What comes after 99?", a: "100" }] },
-      { atom_id: "TT-2.3", strand: "times_tables", title: "3x Table Patterns", description: "Odd/even alternating pattern in the 3s.", misconceptions: ["Thinking all 3s are odd"], retrieval_questions: [{ q: "Is 3 × 4 even or odd?", a: "Even (12)" }] },
-      { atom_id: "PV-2.4", strand: "place_value", title: "Midpoints to 100", description: "Finding 50 as the balance point.", misconceptions: ["Thinking 60 is the middle of 0–100"], retrieval_questions: [{ q: "What is the midpoint of 0 and 100?", a: "50" }] },
-      { atom_id: "TT-2.4", strand: "times_tables", title: "3x Fluency", description: "Rapid recall of 3x facts.", misconceptions: ["Slow counting on fingers"], retrieval_questions: [{ q: "What is 3 × 8?", a: "24" }] },
-      { atom_id: "PV-2.5", strand: "place_value", title: "Internal Zeros", description: "Handling zeros in the tens place (e.g., 104).", misconceptions: ["Writing 14 for 104"], retrieval_questions: [{ q: "How do you write one hundred and four with digits?", a: "104" }] },
-      { atom_id: "TT-2.5", strand: "times_tables", title: "Inverse Intro", description: "Division as the opposite of multiplication.", misconceptions: ["Thinking they are unrelated"], retrieval_questions: [{ q: "If 4 × 6 = 24, what is 24 ÷ 6?", a: "4" }] },
-      { atom_id: "PV-2.6", strand: "place_value", title: "Magnitude", description: "Using < and > to compare 3-digit numbers.", misconceptions: ["Focusing on the ones place instead of hundreds"], retrieval_questions: [{ q: "Which is larger, 312 or 231?", a: "312" }] },
-      { atom_id: "TT-2.6", strand: "times_tables", title: "Fact Families", description: "The relationship between three numbers (e.g., 3, 4, 12).", misconceptions: ["Forgetting one of the four facts"], retrieval_questions: [{ q: "Name the four facts for 3, 4, 12.", a: "3×4=12, 4×3=12, 12÷3=4, 12÷4=3" }] },
-      { atom_id: "PV-3.1", strand: "place_value", title: "The Thousand Cube", description: "10 hundreds make 1 thousand.", misconceptions: ["Visualizing 1000 as a flat shape"], retrieval_questions: [{ q: "How many hundreds in 1000?", a: "10" }] },
-      { atom_id: "TT-3.1", strand: "times_tables", title: "The Double-Double", description: "Using 2× to find 4× (double then double again).", misconceptions: ["Adding 2 instead of doubling"], retrieval_questions: [{ q: "Double 14, then double again to find 4×14.", a: "14×2=28, 28×2=56" }] },
-      { atom_id: "PV-3.2", strand: "place_value", title: "4-Digit Reading", description: "Reading numbers with a thousand comma.", misconceptions: ["Saying 'forty-two hundred' instead of 4 thousand"], retrieval_questions: [{ q: "How do you read 4,200 aloud?", a: "Four thousand two hundred" }] },
-      { atom_id: "TT-3.2", strand: "times_tables", title: "4x Table Practice", description: "Mastery of the 4s.", misconceptions: ["Mixing up 4s and 3s"], retrieval_questions: [{ q: "What is 4 × 6?", a: "24" }] },
-      { atom_id: "PV-3.3", strand: "place_value", title: "Midpoints to 1000", description: "500 as the crucial midpoint.", misconceptions: ["Thinking 100 is the middle of 0–1000"], retrieval_questions: [{ q: "What is the midpoint of 0 and 1000?", a: "500" }] },
-      { atom_id: "TT-3.3", strand: "times_tables", title: "Doubling 4s to 8s", description: "Using 4× to find 8× (double the product).", misconceptions: ["Doubling the factor instead of the product"], retrieval_questions: [{ q: "If 4 × 7 = 28, what is 8 × 7?", a: "56" }] },
-      { atom_id: "PV-3.4", strand: "place_value", title: "Rounding to 10", description: "Nearest multiple of 10.", misconceptions: ["Rounding the wrong digit"], retrieval_questions: [{ q: "Round 67 to the nearest 10.", a: "70" }] },
-      { atom_id: "TT-3.4", strand: "times_tables", title: "8x Table Mastery", description: "Recall of 8s.", misconceptions: ["Forgetting 8 × 7"], retrieval_questions: [{ q: "What is 8 × 8?", a: "64" }] },
-      { atom_id: "PV-3.5", strand: "place_value", title: "Rounding to 100", description: "Nearest multiple of 100.", misconceptions: ["Looking at the ones digit to round to 100"], retrieval_questions: [{ q: "Round 374 to the nearest 100.", a: "400" }] },
-      { atom_id: "TT-3.5", strand: "times_tables", title: "Sharing vs Grouping", description: "Two ways to think about division (share equally vs make groups).", misconceptions: ["Thinking division is only sharing"], retrieval_questions: [{ q: "If 12 is shared between 3 people how many each?", a: "4" }] },
-      { atom_id: "PV-3.6", strand: "place_value", title: "Round & Estimate", description: "Using rounding to predict answers.", misconceptions: ["Being too precise when estimating"], retrieval_questions: [{ q: "Estimate 48 + 73 by rounding to tens.", a: "50 + 70 = 120" }] },
-      { atom_id: "TT-3.6", strand: "times_tables", title: "Division Inverse", description: "Solving division using multiplication facts.", misconceptions: ["Treating division as a separate, harder skill"], retrieval_questions: [{ q: "Use multiplication to solve 32 ÷ 8.", a: "8 × 4 = 32, so answer is 4" }] },
-      { atom_id: "PV-4.1", strand: "place_value", title: "10,000 Threshold", description: "Understanding 10,000 as 10 groups of 1,000.", misconceptions: ["Thinking 10,000 is the same as 1,000"], retrieval_questions: [{ q: "How many thousands are in 10,000?", a: "10" }] },
-      { atom_id: "TT-4.1", strand: "times_tables", title: "Double-3 Strategy", description: "Finding 6× by doubling the 3× table.", misconceptions: ["Doubling the factor instead of the result"], retrieval_questions: [{ q: "If 3 × 7 = 21, what is 6 × 7 using doubling?", a: "42" }] },
-      { atom_id: "PV-4.2", strand: "place_value", title: "5-Digit Composition", description: "Writing numbers like 23,450.", misconceptions: ["Writing extra or missing zeros"], retrieval_questions: [{ q: "Write twenty-three thousand four hundred fifty in digits.", a: "23,450" }] },
-      { atom_id: "TT-4.2", strand: "times_tables", title: "6x Table Fluency", description: "Recall of 6× facts.", misconceptions: ["Mixing up 6 × 7 and 6 × 8"], retrieval_questions: [{ q: "What is 6 × 8?", a: "48" }] },
-      { atom_id: "PV-4.3", strand: "place_value", title: "Rounding to 1,000", description: "Using the 500-midpoint to round 4 and 5 digit numbers.", misconceptions: ["Rounding to the nearest 100 instead of 1,000"], retrieval_questions: [{ q: "Round 12,450 to the nearest 1,000.", a: "12,000" }] },
-      { atom_id: "TT-4.3", strand: "times_tables", title: "10 minus 1 (9s)", description: "Calculating 9× by doing 10× minus one group.", misconceptions: ["Subtracting 1 from the total instead of one group"], retrieval_questions: [{ q: "What is 9 × 7 using 10× - 1×?", a: "10×7=70, 70-7=63" }] },
-      { atom_id: "PV-4.4", strand: "place_value", title: "Placeholder Zeros", description: "Importance of zero in 5-digit numbers.", misconceptions: ["Removing 'extra' zeros incorrectly"], retrieval_questions: [{ q: "What does the zero do in 50,200?", a: "Holds position so digits represent correct places" }] },
-      { atom_id: "TT-4.4", strand: "times_tables", title: "9x Table Patterns", description: "The sum of digits is often 9 (up to certain ranges).", misconceptions: ["Thinking 9× table always follows 8× logic"], retrieval_questions: [{ q: "What is 9 × 5?", a: "45 (4 + 5 = 9)" }] },
-      { atom_id: "PV-4.5", strand: "place_value", title: "Scaling Rounding", description: "Rounding the same number to different powers of 10.", misconceptions: ["Confusing the rules for each place value"], retrieval_questions: [{ q: "Round 12,450 to nearest 10, 100, 1000.", a: "12,450 → 12,450; 12,500; 12,000" }] },
-      { atom_id: "TT-4.5", strand: "times_tables", title: "Distributive Intro", description: "Breaking a factor into two parts (e.g., 7× = 5× + 2×).", misconceptions: ["Adding factors instead of products"], retrieval_questions: [{ q: "Compute 7 × 8 as (5 + 2) × 8.", a: "5×8 + 2×8 = 40 + 16 = 56" }] },
-      { atom_id: "PV-4.6", strand: "place_value", title: "Comparing Magnitude", description: "Ordering numbers up to 99,999.", misconceptions: ["Thinking a number with more zeros is always bigger"], retrieval_questions: [{ q: "Which is larger, 50,200 or 5,020?", a: "50,200" }] },
-      { atom_id: "TT-4.6", strand: "times_tables", title: "7x Table Mastery", description: "Recall of 7× facts.", misconceptions: ["Struggling with 7 × 8"], retrieval_questions: [{ q: "What is 7 × 8?", a: "56" }] },
-      { atom_id: "PV-5.1", strand: "place_value", title: "100,000 Unit", description: "Understanding 100,000 as 10 groups of 10,000.", misconceptions: ["Visualizing the scale incorrectly"], retrieval_questions: [{ q: "How many ten-thousands in 100,000?", a: "10" }] },
-      { atom_id: "TT-5.1", strand: "times_tables", title: "10 + 1 (11s)", description: "Multiplying by 11 using 10× + 1×.", misconceptions: ["Thinking 11× always just repeats digits"], retrieval_questions: [{ q: "What is 11 × 6 using 10× + 1×?", a: "60 + 6 = 66" }] },
-      { atom_id: "PV-5.2", strand: "place_value", title: "The Million", description: "1,000,000 as the landmark of our base-10 system.", misconceptions: ["Writing too many or too few zeros"], retrieval_questions: [{ q: "How many zeros in 1,000,000?", a: "6 zeros" }] },
-      { atom_id: "TT-5.2", strand: "times_tables", title: "11x Mastery", description: "Recall of all 11× facts up to 12.", misconceptions: ["Calculating slowly"], retrieval_questions: [{ q: "What is 11 × 11?", a: "121" }] },
-      { atom_id: "PV-5.3", strand: "place_value", title: "6-Digit Reading", description: "Reading numbers with hundred-thousands.", misconceptions: ["Skipping the 'thousands' family name"], retrieval_questions: [{ q: "Read 345,678 aloud.", a: "Three hundred forty-five thousand six hundred seventy-eight" }] },
-      { atom_id: "TT-5.3", strand: "times_tables", title: "10 + 2 (12s)", description: "Multiplying by 12 using 10× + 2×.", misconceptions: ["Adding 12 instead of multiplying"], retrieval_questions: [{ q: "What is 12 × 4 using 10× + 2×?", a: "40 + 8 = 48" }] },
-      { atom_id: "PV-5.4", strand: "place_value", title: "Rounding to 100,000", description: "Rounding large numbers using the 50,000 midpoint.", misconceptions: ["Looking at the thousands instead of ten-thousands"], retrieval_questions: [{ q: "Round 345,678 to nearest 100,000.", a: "300,000" }] },
-      { atom_id: "TT-5.4", strand: "times_tables", title: "12x Fluency", description: "Rapid recall of 12× table.", misconceptions: ["Struggling with 12 × 8"], retrieval_questions: [{ q: "What is 12 × 9?", a: "108" }] },
-      { atom_id: "PV-5.5", strand: "place_value", title: "Order to 1,000,000", description: "Comparing magnitude of 6-digit numbers.", misconceptions: ["Focusing on the right-hand digits first"], retrieval_questions: [{ q: "Order these: 234,567; 2,345,67 is invalid; which is largest valid 6-digit?", a: "234,567" }] },
-      { atom_id: "TT-5.5", strand: "times_tables", title: "Zero Product Law", description: "Multiplying any number by 0 results in 0.", misconceptions: ["Thinking 5 × 0 is 5"], retrieval_questions: [{ q: "What is 9 × 0?", a: "0" }] },
-      { atom_id: "TT-5.6", strand: "times_tables", title: "Distributive Mastery", description: "Applying the break-apart strategy to any number.", misconceptions: ["Difficulty choosing the best parts to split a factor"], retrieval_questions: [{ q: "Compute 14 × 6 as (10 + 4) × 6.", a: "10×6 + 4×6 = 60 + 24 = 84" }] }
+</body>
+</html>
