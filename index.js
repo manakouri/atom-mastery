@@ -90,7 +90,11 @@ function App() {
     } catch (e) { setIsSaving(false); }
   };
 
-  // 🔎 SEARCH LOGIC
+  // CALCULATE PROGRESS
+  const totalSessions = sessions.length;
+  const masteredSessions = sessions.filter(s => s.status === 'green').length;
+  const progressPercent = totalSessions > 0 ? Math.round((masteredSessions / totalSessions) * 100) : 0;
+
   const filteredSessions = sessions.filter(s => 
     s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.strand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,27 +105,35 @@ function App() {
 
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
-      {/* STICKY HEADER WITH SEARCH */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-6">
-        <div className="max-w-2xl mx-auto">
-            <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase mb-4 text-center">Number Knowledge</h1>
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200">
+        <div className="max-w-2xl mx-auto px-4 py-6">
+            <div className="flex justify-between items-end mb-4">
+                <div>
+                    <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase italic">Roadmap</h1>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mastery Overview</p>
+                </div>
+                <div className="text-right">
+                    <span className="text-2xl font-black text-green-600">{progressPercent}%</span>
+                </div>
+            </div>
+            
+            {/* PROGRESS BAR */}
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-6">
+                <div 
+                    className="h-full bg-green-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${progressPercent}%` }}
+                ></div>
+            </div>
+
             <div className="relative">
                 <input 
                     type="text" 
-                    placeholder="Search by title, strand, or number..."
+                    placeholder="Search sessions or IDs..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-100 border-none rounded-2xl py-3 px-12 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-12 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
                 />
-                <span className="absolute left-4 top-3.5 text-slate-400">🔍</span>
-                {searchTerm && (
-                    <button 
-                        onClick={() => setSearchTerm("")}
-                        className="absolute right-4 top-3 text-xs font-bold text-slate-400 hover:text-slate-600"
-                    >
-                        Clear
-                    </button>
-                )}
+                <span className="absolute left-4 top-3.5">🔍</span>
             </div>
         </div>
       </div>
@@ -132,7 +144,7 @@ function App() {
             <div 
               key={s.id} 
               onClick={() => handleSessionClick(s)}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all cursor-pointer group"
             >
               <div className="flex gap-4">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 transition-all ${
@@ -151,18 +163,14 @@ function App() {
               </div>
             </div>
           ))}
-          {filteredSessions.length === 0 && (
-            <div className="text-center py-20 text-slate-400 italic">No sessions match your search.</div>
-          )}
         </div>
       </div>
 
-      {/* DETAIL DRAWER */}
       {selectedSession && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20">
-              <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-bold tracking-tighter uppercase">✕ Close</button>
+              <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-bold uppercase">✕ Close</button>
               <div className="flex gap-2">
                  {['grey', 'amber', 'green'].map(st => (
                      <button 
@@ -180,12 +188,11 @@ function App() {
             
             <div className="p-8 space-y-10">
               <section>
-                <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2">{selectedSession.strand} • Session {selectedSession.session_id}</div>
+                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{selectedSession.strand} • Session {selectedSession.session_id}</div>
                 <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">{selectedSession.title}</h2>
                 <p className="text-slate-500 font-medium italic">{selectedSession.li}</p>
               </section>
 
-              {/* PLANNING SECTION */}
               <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
                 <div className="flex justify-between items-center mb-4">
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planning & Resources</h4>
@@ -205,17 +212,13 @@ function App() {
               </section>
 
               <section className="space-y-6">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b pb-2">Linked Atoms</h4>
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Linked Atoms</h4>
                 {atoms.map((atom, i) => (
                   <div key={i} className="group relative pl-6 border-l-2 border-slate-100 hover:border-blue-400 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
-                        {/* THE ATOM ID TAG */}
-                        <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-tighter">
+                        <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase">
                             {atom.atom_id}
                         </span>
                         <h5 className="font-bold text-slate-800 text-sm">{atom.title}</h5>
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">{atom.description}</p>
-                  </div>
-                ))}
-              </section
+                    <p className="text-xs text-slate-500 leading-relaxed
