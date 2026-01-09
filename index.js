@@ -1,13 +1,13 @@
+// 1. DIRECT IMPORTS (More stable for GitHub + Babel)
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// 1. IMPORT FROM YOUR GITHUB FILE
-// IMPORTANT: You MUST include the '.js' extension for browser imports!
+// 2. DATA IMPORT
 import { master_sessions, master_atoms } from './atomsdata.js';
 
-// 2. YOUR FIREBASE CONFIG
+// 3. YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyB5L2VJahLNK76xWxC7MjsGbbcf70HjARs",
   authDomain: "number-knowledge-71dba.firebaseapp.com",
@@ -17,6 +17,7 @@ const firebaseConfig = {
   appId: "1:931772776390:web:e6fddd88629bcf1d803cc7"
 };
 
+// 4. INITIALIZE
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
