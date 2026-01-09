@@ -19,29 +19,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 2. HELPER: Status Badge
+// HELPER: Status Badge
 const StatusBadge = ({ status }) => {
   const styles = {
     green: "bg-green-100 text-green-700 border-green-200",
     amber: "bg-amber-100 text-amber-700 border-amber-200",
     grey: "bg-slate-100 text-slate-500 border-slate-200"
   };
+  const labels = { green: 'Mastery', amber: 'Needs Repeating', grey: 'Untaught' };
   return (
     <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded border ${styles[status] || styles.grey}`}>
-      {status === 'amber' ? 'Taught / Needs Repeating' : status === 'green' ? 'Mastery' : 'Untaught'}
+      {labels[status]}
     </span>
   );
 };
 
-// 3. MAIN APP
 function App() {
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [atoms, setAtoms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
+  const [planningText, setPlanningText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch data from Firebase
   useEffect(() => {
     async function fetchSessions() {
       try {
@@ -56,6 +56,7 @@ function App() {
 
   const handleSessionClick = async (session) => {
     setSelectedSession(session);
+    setPlanningText(session.planning || ""); // Load existing planning
     setAtoms([]);
     try {
       const fetchedAtoms = [];
@@ -67,24 +68,30 @@ function App() {
     } catch (e) { console.error(e); }
   };
 
-  // NEW: Update Status Function
   const updateStatus = async (newStatus) => {
     if (!selectedSession) return;
-    setUpdating(true);
     try {
       const sessionRef = doc(db, "master_sessions", selectedSession.id);
       await updateDoc(sessionRef, { status: newStatus });
-      
-      // Update local state so the UI changes immediately
-      setSessions(prev => prev.map(s => 
-        s.id === selectedSession.id ? { ...s, status: newStatus } : s
-      ));
+      setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, status: newStatus } : s));
       setSelectedSession(prev => ({ ...prev, status: newStatus }));
-      
+    } catch (e) { alert(e.message); }
+  };
+
+  // NEW: Save Planning function
+  const savePlanning = async () => {
+    if (!selectedSession) return;
+    setIsSaving(true);
+    try {
+      const sessionRef = doc(db, "master_sessions", selectedSession.id);
+      await updateDoc(sessionRef, { planning: planningText });
+      // Update local sessions state so it persists without refresh
+      setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, planning: planningText } : s));
+      setTimeout(() => setIsSaving(false), 1000); // Show "Saved" for 1 sec
     } catch (e) {
-      alert("Error updating status: " + e.message);
+      console.error(e);
+      setIsSaving(false);
     }
-    setUpdating(false);
   };
 
   if (loading) return <div className="flex justify-center items-center min-h-screen text-slate-400">Loading Journey...</div>;
@@ -93,8 +100,8 @@ function App() {
     <div className="bg-slate-50 min-h-screen pb-20">
       <div className="max-w-2xl mx-auto py-12 px-4">
         <header className="mb-10 text-center">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Number Knowledge</h1>
-          <p className="text-slate-500">Teacher's Tracking Dashboard</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">Roadmap</h1>
+          <p className="text-slate-500 text-sm font-medium">Number Knowledge Mastery</p>
         </header>
 
         <div className="space-y-4">
@@ -105,15 +112,15 @@ function App() {
               className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="flex gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
-                  s.status === 'green' ? 'bg-green-600 text-white' : 
-                  s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-900 text-white'
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 transition-all ${
+                  s.status === 'green' ? 'bg-green-600 text-white rotate-3' : 
+                  s.status === 'amber' ? 'bg-amber-500 text-white -rotate-3' : 'bg-slate-100 text-slate-400'
                 }`}>
                   {s.session_id}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{s.strand}</span>
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.strand}</span>
                     <StatusBadge status={s.status} />
                   </div>
                   <h3 className="font-bold text-slate-800 group-hover:text-blue-600">{s.title}</h3>
@@ -127,52 +134,50 @@ function App() {
       {/* DETAIL DRAWER */}
       {selectedSession && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto p-0 flex flex-col">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20">
-              <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕ Close</button>
-              <h4 className="text-xs font-black uppercase text-slate-400">Session Details</h4>
+              <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-sm font-bold tracking-tighter uppercase">✕ Close</button>
+              <div className="flex gap-2">
+                 <button onClick={() => updateStatus('grey')} className={`w-3 h-3 rounded-full border ${selectedSession.status === 'grey' ? 'bg-slate-400 border-slate-500' : 'bg-transparent border-slate-200'}`}></button>
+                 <button onClick={() => updateStatus('amber')} className={`w-3 h-3 rounded-full border ${selectedSession.status === 'amber' ? 'bg-amber-500 border-amber-600' : 'bg-transparent border-slate-200'}`}></button>
+                 <button onClick={() => updateStatus('green')} className={`w-3 h-3 rounded-full border ${selectedSession.status === 'green' ? 'bg-green-600 border-green-700' : 'bg-transparent border-slate-200'}`}></button>
+              </div>
             </div>
             
-            <div className="p-8 flex-1">
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-slate-900 mb-2">{selectedSession.title}</h2>
-                <p className="text-slate-500 italic mb-6">{selectedSession.li}</p>
-                
-                {/* STATUS SELECTOR */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-3 text-center">Update Progress</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button 
-                      onClick={() => updateStatus('grey')}
-                      className={`py-2 px-1 rounded-lg text-[10px] font-bold border transition-all ${selectedSession.status === 'grey' ? 'bg-white border-slate-300 shadow-sm ring-2 ring-slate-900/5' : 'bg-transparent border-transparent opacity-50'}`}
-                    >
-                      Untaught
-                    </button>
-                    <button 
-                      onClick={() => updateStatus('amber')}
-                      className={`py-2 px-1 rounded-lg text-[10px] font-bold border transition-all ${selectedSession.status === 'amber' ? 'bg-amber-500 text-white border-amber-600' : 'bg-transparent border-transparent opacity-50'}`}
-                    >
-                      Taught
-                    </button>
-                    <button 
-                      onClick={() => updateStatus('green')}
-                      className={`py-2 px-1 rounded-lg text-[10px] font-bold border transition-all ${selectedSession.status === 'green' ? 'bg-green-600 text-white border-green-700' : 'bg-transparent border-transparent opacity-50'}`}
-                    >
-                      Mastery
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div className="p-8 space-y-10">
+              <section>
+                <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">{selectedSession.title}</h2>
+                <p className="text-blue-600 font-bold text-sm tracking-tight">{selectedSession.li}</p>
+              </section>
 
-              <div className="space-y-6">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2">Linked Atoms</h4>
+              {/* PLANNING SECTION */}
+              <section className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-xs font-black text-blue-900 uppercase tracking-widest">Planning & Resources</h4>
+                    <button 
+                        onClick={savePlanning}
+                        className={`text-[10px] font-bold px-3 py-1 rounded-full transition-all ${isSaving ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                        {isSaving ? '✓ Saved' : 'Save Notes'}
+                    </button>
+                </div>
+                <textarea 
+                    value={planningText}
+                    onChange={(e) => setPlanningText(e.target.value)}
+                    placeholder="Add links to White Rose, games, or student focus notes here..."
+                    className="w-full bg-white border border-blue-100 rounded-xl p-4 text-sm text-slate-700 h-32 focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                />
+              </section>
+
+              <section className="space-y-6">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b pb-2">Learning Atoms</h4>
                 {atoms.map((atom, i) => (
-                  <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div key={i} className="group border-l-2 border-slate-100 pl-4 py-1 hover:border-blue-400 transition-colors">
                     <h5 className="font-bold text-slate-800 text-sm mb-1">{atom.title}</h5>
-                    <p className="text-xs text-slate-600 leading-relaxed">{atom.description}</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">{atom.description}</p>
                   </div>
                 ))}
-              </div>
+              </section>
             </div>
           </div>
         </div>
