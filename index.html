@@ -4,20 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maths Mastery Dashboard</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Custom Scrollbar for a cleaner UI */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f8fafc; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
-
     <script type="importmap">
     {
       "imports": {
@@ -30,11 +17,12 @@
     }
     </script>
 </head>
-<body class="bg-[#f8fafc] text-slate-900 min-h-screen">
-    
-    <div id="root"></div>
-
+<body class="bg-slate-50">
+    <div id="root">
+        <div class="flex items-center justify-center min-h-screen">
+            <p class="text-slate-400 animate-pulse">Initializing Application...</p>
+        </div>
+    </div>
     <script type="module" src="./index.js"></script>
-
 </body>
 </html>
