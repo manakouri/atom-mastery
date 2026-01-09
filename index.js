@@ -22,49 +22,35 @@ const db = getFirestore(app);
 const RetrievalScreen = ({ questions, onClose }) => {
   const [idx, setIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
-
   if (!questions.length) return null;
   const current = questions[idx];
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 text-white text-center">
-      <button onClick={onClose} className="absolute top-8 right-8 text-slate-500 font-bold uppercase tracking-tighter">✕ Exit</button>
-      
+      <button onClick={onClose} className="absolute top-8 right-8 text-slate-500 font-bold uppercase tracking-tighter hover:text-white transition-colors">✕ Exit Practice</button>
       <div className="mb-8">
         <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em]">Question {idx + 1} of {questions.length}</span>
-        <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold">Session Source: {current.sourceId}</div>
+        <div className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">Source: Session {current.sourceId}</div>
       </div>
-
       <div className="max-w-2xl w-full">
         <h2 className="text-3xl md:text-5xl font-black mb-12 leading-tight">{current.q}</h2>
-        
         {revealed ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="text-green-400 text-2xl md:text-4xl font-bold mb-12">{current.a}</div>
-             <button 
-                onClick={() => {
-                    if(idx < questions.length - 1) { setIdx(idx + 1); setRevealed(false); }
-                    else { onClose(); }
-                }}
+             <div className="text-green-400 text-2xl md:text-4xl font-bold mb-12 tracking-tight">{current.a}</div>
+             <button onClick={() => { if(idx < questions.length - 1) { setIdx(idx + 1); setRevealed(false); } else { onClose(); } }}
                 className="px-10 py-4 bg-white text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:scale-105 transition-transform"
              >
-                {idx === questions.length - 1 ? 'Finish' : 'Next Question'}
+                {idx === questions.length - 1 ? 'Finish Session' : 'Next Question'}
              </button>
           </div>
         ) : (
-          <button 
-            onClick={() => setRevealed(true)}
-            className="px-10 py-4 border-2 border-white/20 rounded-2xl font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
-          >
-            Reveal Answer
-          </button>
+          <button onClick={() => setRevealed(true)} className="px-10 py-4 border-2 border-white/20 rounded-2xl font-black uppercase tracking-widest hover:bg-white/5 transition-colors">Reveal Answer</button>
         )}
       </div>
     </div>
   );
 };
 
-// MAIN APP
 function App() {
   const [sessions, setSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,6 +58,8 @@ function App() {
   const [atoms, setAtoms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [retrievalSet, setRetrievalSet] = useState([]);
+  const [planningText, setPlanningText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function fetchSessions() {
@@ -85,173 +73,172 @@ function App() {
     fetchSessions();
   }, []);
 
-  // THE SPACED RETRIEVAL LOGIC
-
+  // THE UPDATED RETRIEVAL LOGIC
   const startRetrieval = async () => {
-    // 1. Get all mastered sessions
     const mastered = sessions.filter(s => s.status === 'green');
+    if (mastered.length < 1) return alert("Mark sessions as 'Mastery' to begin retrieval.");
     
-    if (mastered.length < 1) {
-      return alert("You need at least one 'Mastery' (Green) session to start retrieval!");
-    }
-
-    // 2. Determine 'n' (the highest session ID reached so far)
     const n = Math.max(...mastered.map(s => s.session_id));
-    
-    // 3. Define our ideal targets [n-1, n-1, n-3, n-7, n-14]
     const targets = [n - 1, n - 1, n - 3, n - 7, n - 14];
     const finalQuestions = [];
     
-    // 4. Create a pool of ALL mastered atoms to use for gap-filling
-    let masteredAtomsPool = [];
-    for (const session of mastered) {
-      for (const atomId of (session.atoms || [])) {
-        masteredAtomsPool.push({ atomId, sessionId: session.session_id });
-      }
-    }
+    // Pool for gap filling
+    let fullPool = [];
+    mastered.forEach(s => s.atoms?.forEach(a => fullPool.push({ atomId: a, sessionId: s.session_id })));
 
-    // Helper to fetch a random question from a specific atom ID
-    const getRandomQuestionFromAtom = async (atomId, sourceId) => {
-      const atomSnap = await getDoc(doc(db, "master_atoms", atomId));
-      if (atomSnap.exists()) {
-        const data = atomSnap.data();
-        const pool = data.retrieval_pool || [];
-        if (pool.length > 0) {
-          const randomQ = pool[Math.floor(Math.random() * pool.length)];
-          return { ...randomQ, sourceId, atomId };
-        }
+    const fetchQ = async (atomId, sourceId) => {
+      const snap = await getDoc(doc(db, "master_atoms", atomId));
+      if (snap.exists() && snap.data().retrieval_pool?.length > 0) {
+        const pool = snap.data().retrieval_pool;
+        return { ...pool[Math.floor(Math.random() * pool.length)], sourceId, atomId };
       }
       return null;
     };
 
-    // 5. Try to fill based on Spaced Targets
-    for (const targetId of targets) {
-      if (targetId <= 0) continue;
-      
-      // Find all sessions matching this target ID (could be multiple strands)
-      const potentialSessions = mastered.filter(s => s.session_id === targetId);
-      
-      if (potentialSessions.length > 0) {
-        // Pick a random session from the matches, then a random atom from that session
-        const selectedSession = potentialSessions[Math.floor(Math.random() * potentialSessions.length)];
-        const selectedAtomId = selectedSession.atoms[Math.floor(Math.random() * selectedSession.atoms.length)];
-        
-        const q = await getRandomQuestionFromAtom(selectedAtomId, targetId);
+    // 1. Try targets
+    for (const t of targets) {
+      if (t <= 0) continue;
+      const matches = mastered.filter(s => s.session_id === t);
+      if (matches.length > 0) {
+        const s = matches[Math.floor(Math.random() * matches.length)];
+        const q = await fetchQ(s.atoms[Math.floor(Math.random() * s.atoms.length)], t);
         if (q) finalQuestions.push(q);
       }
     }
 
-    // 6. GAP FILLING: If we have < 5 questions, draw randomly from the entire mastered pool
-    while (finalQuestions.length < 5 && masteredAtomsPool.length > 0) {
-      const randomEntry = masteredAtomsPool[Math.floor(Math.random() * masteredAtomsPool.length)];
-      
-      // Prevent duplicates in the same set
-      if (finalQuestions.some(q => q.atomId === randomEntry.atomId)) {
-          // If we have very few atoms, we might have to allow duplicates, 
-          // but for now we'll just try to avoid them.
-          if (masteredAtomsPool.length <= finalQuestions.length) break; 
-          continue; 
+    // 2. Fill gaps to reach 5
+    while (finalQuestions.length < 5 && fullPool.length > 0) {
+      const pick = fullPool[Math.floor(Math.random() * fullPool.length)];
+      if (finalQuestions.some(q => q.atomId === pick.atomId)) {
+        if (fullPool.length <= finalQuestions.length) break;
+        continue;
       }
-
-      const q = await getRandomQuestionFromAtom(randomEntry.atomId, randomEntry.sessionId);
+      const q = await fetchQ(pick.atomId, pick.sessionId);
       if (q) finalQuestions.push(q);
-      
-      // Safety break to prevent infinite loops if atoms don't have questions
       if (finalQuestions.length >= 5) break;
     }
-
     setRetrievalSet(finalQuestions);
   };
 
   const handleSessionClick = async (session) => {
     setSelectedSession(session);
+    setPlanningText(session.planning || "");
     setAtoms([]);
     try {
-      const fetchedAtoms = [];
-      for (const atomId of (session.atoms || [])) {
-        const atomDoc = await getDoc(doc(db, "master_atoms", atomId));
-        if (atomDoc.exists()) fetchedAtoms.push(atomDoc.data());
+      const fetched = [];
+      for (const id of (session.atoms || [])) {
+        const d = await getDoc(doc(db, "master_atoms", id));
+        if (d.exists()) fetched.push(d.data());
       }
-      setAtoms(fetchedAtoms);
+      setAtoms(fetched);
     } catch (e) { console.error(e); }
   };
 
   const updateStatus = async (newStatus) => {
     if (!selectedSession) return;
-    try {
-      const sessionRef = doc(db, "master_sessions", selectedSession.id);
-      await updateDoc(sessionRef, { status: newStatus });
-      setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, status: newStatus } : s));
-      setSelectedSession(prev => ({ ...prev, status: newStatus }));
-    } catch (e) { alert(e.message); }
+    const ref = doc(db, "master_sessions", selectedSession.id);
+    await updateDoc(ref, { status: newStatus });
+    setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, status: newStatus } : s));
+    setSelectedSession(prev => ({ ...prev, status: newStatus }));
   };
 
-  if (loading) return <div className="p-20 text-center text-slate-400 font-bold">Initializing...</div>;
+  const savePlanning = async () => {
+    if (!selectedSession) return;
+    setIsSaving(true);
+    await updateDoc(doc(db, "master_sessions", selectedSession.id), { planning: planningText });
+    setSessions(prev => prev.map(s => s.id === selectedSession.id ? { ...s, planning: planningText } : s));
+    setTimeout(() => setIsSaving(false), 800);
+  };
+
+  const progress = sessions.length > 0 ? Math.round((sessions.filter(s => s.status === 'green').length / sessions.length) * 100) : 0;
+  const filtered = sessions.filter(s => s.title.toLowerCase().includes(searchTerm.toLowerCase()) || s.strand.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Loading Engine...</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20 font-sans">
+    <div className="bg-slate-50 min-h-screen pb-20 font-sans text-slate-900">
       {retrievalSet.length > 0 && <RetrievalScreen questions={retrievalSet} onClose={() => setRetrievalSet([])} />}
 
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <header className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase">Roadmap</h1>
-            <button 
-                onClick={startRetrieval}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-6 py-3 rounded-2xl shadow-lg shadow-blue-200 transition-all uppercase tracking-[0.2em]"
-            >
-                Generate Retrieval
-            </button>
-        </header>
-
-        <div className="relative mb-8">
-            <input type="text" placeholder="Search roadmap..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-12 text-sm shadow-sm outline-none focus:ring-2 focus:ring-blue-500" />
-            <span className="absolute left-4 top-4">🔍</span>
-        </div>
-
-        <div className="space-y-4">
-          {sessions.filter(s => s.title.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
-            <div key={s.id} onClick={() => handleSessionClick(s)} className="bg-white p-6 rounded-3xl border border-slate-200 hover:border-blue-400 transition-all cursor-pointer flex items-center justify-between group">
-              <div className="flex items-center gap-5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${s.status === 'green' ? 'bg-green-600 text-white' : s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-50 text-slate-400'}`}>{s.session_id}</div>
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-6">
+        <div className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
                 <div>
-                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.strand}</div>
-                    <h3 className="font-bold text-slate-800">{s.title}</h3>
+                  <h1 className="text-xl font-black italic tracking-tighter uppercase">Roadmap</h1>
+                  <div className="h-1.5 w-full bg-slate-100 mt-2 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+                  </div>
                 </div>
-              </div>
-              <div className={`w-3 h-3 rounded-full ${s.status === 'green' ? 'bg-green-500' : s.status === 'amber' ? 'bg-amber-500' : 'bg-slate-200'}`}></div>
+                <button onClick={startRetrieval} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-5 py-3 rounded-2xl transition-all uppercase tracking-widest shadow-lg shadow-blue-100">Daily Retrieval</button>
             </div>
-          ))}
+            <div className="relative">
+                <input type="text" placeholder="Search strands or sessions..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-100 border-none rounded-2xl py-3.5 px-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                <span className="absolute left-4 top-3.5">🔍</span>
+            </div>
         </div>
       </div>
 
-      {/* SESSION DRAWER (TEACHER VIEW) */}
+      <div className="max-w-2xl mx-auto pt-8 px-4 space-y-3">
+        {filtered.map(s => (
+          <div key={s.id} onClick={() => handleSessionClick(s)} className="bg-white p-5 rounded-3xl border border-slate-200 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between group shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${s.status === 'green' ? 'bg-green-600 text-white' : s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{s.session_id}</div>
+              <div>
+                <div className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">{s.strand}</div>
+                <h3 className="font-bold text-slate-800 leading-tight">{s.title}</h3>
+              </div>
+            </div>
+            <div className={`w-2.5 h-2.5 rounded-full ${s.status === 'green' ? 'bg-green-500' : s.status === 'amber' ? 'bg-amber-500' : 'bg-slate-200'}`}></div>
+          </div>
+        ))}
+      </div>
+
       {selectedSession && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto p-8 flex flex-col">
-            <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-bold uppercase mb-8">✕ Close</button>
-            <div className="mb-8">
-                <h2 className="text-3xl font-black mb-2">{selectedSession.title}</h2>
-                <p className="text-slate-500 font-medium italic mb-6">{selectedSession.li}</p>
-                <div className="flex gap-4">
-                    {['grey', 'amber', 'green'].map(st => (
-                        <button key={st} onClick={() => updateStatus(st)} className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${selectedSession.status === st ? (st === 'green' ? 'bg-green-600 border-green-600 text-white' : st === 'amber' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-slate-900 border-slate-900 text-white') : 'bg-white border-slate-200 text-slate-400'}`}>
-                            {st === 'grey' ? 'Untaught' : st === 'amber' ? 'Review' : 'Mastery'}
-                        </button>
-                    ))}
-                </div>
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+              <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-black uppercase tracking-tighter">✕ Close</button>
+              <div className="flex gap-2">
+                {['grey', 'amber', 'green'].map(st => (
+                    <button key={st} onClick={() => updateStatus(st)} className={`w-6 h-6 rounded-full border-2 ${selectedSession.status === st ? (st === 'green' ? 'bg-green-600 border-green-700' : st === 'amber' ? 'bg-amber-500 border-amber-600' : 'bg-slate-900 border-slate-900') : 'bg-transparent border-slate-200'}`} />
+                ))}
+              </div>
             </div>
             
-            <div className="space-y-6">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b pb-2">Technical Atoms</h4>
+            <div className="p-8 space-y-10">
+              <section>
+                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{selectedSession.strand} • Session {selectedSession.session_id}</div>
+                <h2 className="text-3xl font-black text-slate-900 leading-tight mb-2">{selectedSession.title}</h2>
+                <p className="text-slate-500 font-medium italic">{selectedSession.li}</p>
+              </section>
+
+              {/* PLANNING SECTION RESTORED */}
+              <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+                <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Teacher Planning</h4>
+                    <button onClick={savePlanning} className={`text-[10px] font-bold px-4 py-1.5 rounded-full transition-all ${isSaving ? 'bg-green-600 text-white' : 'bg-slate-900 text-white'}`}>
+                        {isSaving ? '✓ Saved' : 'Save Notes'}
+                    </button>
+                </div>
+                <textarea 
+                    value={planningText} 
+                    onChange={(e) => setPlanningText(e.target.value)} 
+                    placeholder="Add focus groups, lesson links, or notes..." 
+                    className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 h-40 focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm" 
+                />
+              </section>
+
+              <section className="space-y-6">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b pb-2">Linked Atoms</h4>
                 {atoms.map((atom, i) => (
-                    <div key={i} className="pl-4 border-l-2 border-slate-100 py-1">
+                    <div key={i} className="pl-4 border-l-2 border-slate-100 py-1 hover:border-blue-400 transition-colors">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">{atom.atom_id}</span>
                             <h5 className="font-bold text-slate-800 text-sm">{atom.title}</h5>
                         </div>
-                        <p className="text-xs text-slate-500">{atom.description}</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">{atom.description}</p>
                     </div>
                 ))}
+              </section>
             </div>
           </div>
         </div>
