@@ -6,7 +6,6 @@ import {
   query, orderBy, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// 1. FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyB5L2VJahLNK76xWxC7MjsGbbcf70HjARs",
   authDomain: "number-knowledge-71dba.firebaseapp.com",
@@ -19,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// HELPER: Status Badge
 const StatusBadge = ({ status }) => {
   const styles = {
     green: "bg-green-100 text-green-700 border-green-200",
@@ -27,11 +25,7 @@ const StatusBadge = ({ status }) => {
     grey: "bg-slate-100 text-slate-500 border-slate-200"
   };
   const labels = { green: 'Mastery', amber: 'Needs Repeating', grey: 'Untaught' };
-  return (
-    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded border ${styles[status] || styles.grey}`}>
-      {labels[status]}
-    </span>
-  );
+  return <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded border ${styles[status] || styles.grey}`}>{labels[status] || 'Untaught'}</span>;
 };
 
 function App() {
@@ -42,6 +36,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [planningText, setPlanningText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [revealedIndex, setRevealedIndex] = useState(null);
 
   useEffect(() => {
     async function fetchSessions() {
@@ -59,6 +55,8 @@ function App() {
     setSelectedSession(session);
     setPlanningText(session.planning || "");
     setAtoms([]);
+    setPracticeMode(false);
+    setRevealedIndex(null);
     try {
       const fetchedAtoms = [];
       for (const atomId of (session.atoms || [])) {
@@ -90,135 +88,131 @@ function App() {
     } catch (e) { setIsSaving(false); }
   };
 
-  // CALCULATE PROGRESS
   const totalSessions = sessions.length;
   const masteredSessions = sessions.filter(s => s.status === 'green').length;
   const progressPercent = totalSessions > 0 ? Math.round((masteredSessions / totalSessions) * 100) : 0;
-
+  
   const filteredSessions = sessions.filter(s => 
     s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.strand.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.session_id.toString() === searchTerm
   );
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen text-slate-400 font-bold animate-pulse">Loading Roadmap...</div>;
+  if (loading) return <div className="p-20 text-center font-bold text-slate-400">Loading Roadmap...</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20">
-      <div className="sticky top-0 z-30 bg-white border-b border-slate-200">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="bg-slate-50 min-h-screen pb-20 font-sans">
+      {/* HEADER */}
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-6">
+        <div className="max-w-2xl mx-auto">
             <div className="flex justify-between items-end mb-4">
-                <div>
-                    <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase italic">Roadmap</h1>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mastery Overview</p>
-                </div>
-                <div className="text-right">
-                    <span className="text-2xl font-black text-green-600">{progressPercent}%</span>
-                </div>
+                <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase italic leading-none">Roadmap</h1>
+                <span className="text-2xl font-black text-green-600">{progressPercent}%</span>
             </div>
-            
-            {/* PROGRESS BAR */}
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-6">
-                <div 
-                    className="h-full bg-green-500 transition-all duration-1000 ease-out"
-                    style={{ width: `${progressPercent}%` }}
-                ></div>
+                <div className="h-full bg-green-500 transition-all duration-700" style={{ width: `${progressPercent}%` }}></div>
             </div>
-
             <div className="relative">
-                <input 
-                    type="text" 
-                    placeholder="Search sessions or IDs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-12 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                />
+                <input type="text" placeholder="Search sessions..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
                 <span className="absolute left-4 top-3.5">🔍</span>
             </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto pt-8 px-4">
-        <div className="space-y-4">
-          {filteredSessions.map(s => (
-            <div 
-              key={s.id} 
-              onClick={() => handleSessionClick(s)}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all cursor-pointer group"
-            >
-              <div className="flex gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 transition-all ${
-                  s.status === 'green' ? 'bg-green-600 text-white' : 
-                  s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'
-                }`}>
-                  {s.session_id}
+      {/* LIST */}
+      <div className="max-w-2xl mx-auto pt-8 px-4 space-y-4">
+        {filteredSessions.map(s => (
+          <div key={s.id} onClick={() => handleSessionClick(s)} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all cursor-pointer">
+            <div className="flex gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${s.status === 'green' ? 'bg-green-600 text-white' : s.status === 'amber' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{s.session_id}</div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.strand}</span>
+                  <StatusBadge status={s.status} />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.strand}</span>
-                    <StatusBadge status={s.status} />
-                  </div>
-                  <h3 className="font-bold text-slate-800 group-hover:text-blue-600">{s.title}</h3>
-                </div>
+                <h3 className="font-bold text-slate-800">{s.title}</h3>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
+      {/* DRAWER */}
       {selectedSession && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
             <div className="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20">
               <button onClick={() => setSelectedSession(null)} className="text-slate-400 hover:text-slate-900 text-xs font-bold uppercase">✕ Close</button>
-              <div className="flex gap-2">
-                 {['grey', 'amber', 'green'].map(st => (
-                     <button 
-                        key={st}
-                        onClick={() => updateStatus(st)} 
-                        className={`w-4 h-4 rounded-full border transition-all ${
-                            selectedSession.status === st 
-                            ? (st === 'green' ? 'bg-green-600 border-green-700 scale-125' : st === 'amber' ? 'bg-amber-500 border-amber-600 scale-125' : 'bg-slate-400 border-slate-500 scale-125') 
-                            : 'bg-transparent border-slate-200 hover:border-slate-400'
-                        }`}
-                     />
-                 ))}
-              </div>
+              <button onClick={() => setPracticeMode(!practiceMode)} className={`text-[10px] font-black px-4 py-1.5 rounded-full border transition-all ${practiceMode ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-blue-600 border-blue-200'}`}>
+                {practiceMode ? 'Exit Practice' : 'Practice Mode'}
+              </button>
             </div>
             
             <div className="p-8 space-y-10">
-              <section>
-                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{selectedSession.strand} • Session {selectedSession.session_id}</div>
-                <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">{selectedSession.title}</h2>
-                <p className="text-slate-500 font-medium italic">{selectedSession.li}</p>
-              </section>
-
-              <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
-                <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planning & Resources</h4>
-                    <button 
-                        onClick={savePlanning}
-                        className={`text-[10px] font-bold px-3 py-1 rounded-full transition-all ${isSaving ? 'bg-green-600 text-white' : 'bg-slate-900 text-white hover:bg-black'}`}
-                    >
-                        {isSaving ? '✓ Saved' : 'Save Notes'}
-                    </button>
-                </div>
-                <textarea 
-                    value={planningText}
-                    onChange={(e) => setPlanningText(e.target.value)}
-                    placeholder="Enter focus groups or lesson links..."
-                    className="w-full bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-700 h-32 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
-                />
-              </section>
-
-              <section className="space-y-6">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Linked Atoms</h4>
-                {atoms.map((atom, i) => (
-                  <div key={i} className="group relative pl-6 border-l-2 border-slate-100 hover:border-blue-400 transition-colors">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase">
-                            {atom.atom_id}
-                        </span>
-                        <h5 className="font-bold text-slate-800 text-sm">{atom.title}</h5>
+              {!practiceMode ? (
+                <>
+                  <section>
+                    <div className="text-[10px] font-black text-blue-600 uppercase mb-2">{selectedSession.strand} • {selectedSession.session_id}</div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">{selectedSession.title}</h2>
+                    <p className="text-slate-500 italic">{selectedSession.li}</p>
+                    <div className="flex gap-2 mt-4">
+                        {['grey', 'amber', 'green'].map(st => (
+                            <button key={st} onClick={() => updateStatus(st)} className={`w-6 h-6 rounded-full border ${selectedSession.status === st ? (st === 'green' ? 'bg-green-600 border-green-700' : st === 'amber' ? 'bg-amber-500 border-amber-600' : 'bg-slate-400 border-slate-500') : 'bg-transparent border-slate-200'}`} />
+                        ))}
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed
+                  </section>
+
+                  <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planning</h4>
+                        <button onClick={savePlanning} className={`text-[10px] font-bold px-3 py-1 rounded-full ${isSaving ? 'bg-green-600 text-white' : 'bg-slate-900 text-white'}`}>{isSaving ? '✓ Saved' : 'Save Notes'}</button>
+                    </div>
+                    <textarea value={planningText} onChange={(e) => setPlanningText(e.target.value)} placeholder="Lesson notes..." className="w-full bg-white border border-slate-200 rounded-xl p-4 text-sm h-32 outline-none focus:ring-1 focus:ring-blue-400" />
+                  </section>
+
+                  <section className="space-y-6">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase border-b pb-2">Linked Atoms</h4>
+                    {atoms.map((atom, i) => (
+                      <div key={i} className="pl-4 border-l-2 border-slate-100 hover:border-blue-400 transition-colors">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">{atom.atom_id}</span>
+                            <h5 className="font-bold text-slate-800 text-sm">{atom.title}</h5>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">{atom.description}</p>
+                      </div>
+                    ))}
+                  </section>
+                </>
+              ) : (
+                <section className="space-y-8">
+                  <h4 className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Retrieval Practice</h4>
+                  {atoms.map((atom, i) => {
+                    const pool = atom.retrieval_pool || [];
+                    const activeQ = pool.length > 0 ? pool[0] : { q: "No questions added yet.", a: "N/A" };
+                    return (
+                      <div key={i} className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl">
+                        <div className="text-[10px] font-bold text-blue-400 mb-4 uppercase">{atom.atom_id}</div>
+                        <h3 className="text-xl font-bold mb-6 text-slate-100">{activeQ.q}</h3>
+                        <button onClick={() => setRevealedIndex(revealedIndex === i ? null : i)} className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold border border-white/10 transition-all">
+                            {revealedIndex === i ? "Hide Answer" : "Reveal Answer"}
+                        </button>
+                        {revealedIndex === i && (
+                            <div className="mt-6 pt-6 border-t border-white/10 text-green-400 font-bold text-lg animate-in slide-in-from-top-2">
+                                {activeQ.a}
+                            </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </section>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
