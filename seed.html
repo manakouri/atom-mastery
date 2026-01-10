@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Seeder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen font-sans">
+    <div class="max-w-md w-full bg-slate-800 p-10 rounded-[3rem] shadow-2xl text-center">
+        <h1 class="text-2xl font-black mb-4">Data Seeder</h1>
+        <p class="text-slate-400 text-sm mb-8">Click below to push updates from <code class="bg-slate-700 px-2 py-1 rounded">atomsdata.js</code> to Firestore.</p>
+        
+        <button id="seedBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all active:scale-95">
+            Push Updates to Cloud
+        </button>
+        
+        <div id="status" class="mt-6 text-xs font-mono text-slate-500 break-words"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+        
+        // Import your local data
+        import { master_sessions, master_atoms } from './atomsdata.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5L2VJahLNK76xWxC7MjsGbbcf70HjARs",
+            authDomain: "number-knowledge-71dba.firebaseapp.com",
+            projectId: "number-knowledge-71dba",
+            storageBucket: "number-knowledge-71dba.firebasestorage.app",
+            messagingSenderId: "931772776390",
+            appId: "1:931772776390:web:e6fddd88629bcf1d803cc7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const statusDiv = document.getElementById('status');
+
+        document.getElementById('seedBtn').addEventListener('click', async () => {
+            statusDiv.innerHTML = "Starting update...";
+            
+            try {
+                // 1. Update Sessions
+                for (const session of master_sessions) {
+                    const { id, ...data } = session;
+                    // We REMOVE status and planning from the upload so we don't overwrite teacher work
+                    delete data.status; 
+                    delete data.planning;
+
+                    await setDoc(doc(db, "master_sessions", id), data, { merge: true });
+                    statusDiv.innerHTML = `Updated Session: ${id}`;
+                }
+
+                // 2. Update Atoms (The retrieval questions)
+                for (const atom of master_atoms) {
+                    const { atom_id, ...data } = atom;
+                    await setDoc(doc(db, "master_atoms", atom_id), data, { merge: true });
+                    statusDiv.innerHTML = `Updated Atom: ${atom_id}`;
+                }
+
+                statusDiv.innerHTML = "✅ UPDATE COMPLETE. You can close this tab.";
+                statusDiv.classList.add('text-green-400');
+            } catch (e) {
+                statusDiv.innerHTML = "❌ ERROR: " + e.message;
+                statusDiv.classList.add('text-red-400');
+            }
+        });
+    </script>
+</body>
+</html>
