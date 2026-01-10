@@ -75,42 +75,76 @@ function App() {
     fetchSessions();
   }, []);
 
+  // UPDATED RETRIEVAL ENGINE WITH DE-DUPLICATION logic
   const startRetrieval = async () => {
     const mastered = sessions.filter(s => s.status === 'green');
     if (mastered.length < 1) return alert("You need mastered (Green) sessions to generate retrieval!");
     
+    // 1. Identify Target Intervals
     const n = Math.max(...mastered.map(s => s.session_id));
     const targets = [n - 1, n - 1, n - 3, n - 7, n - 14];
-    const finalQuestions = [];
     
+    const finalQuestions = [];
+    const usedAtomIds = new Set(); // To prevent duplicates
+
+    // 2. Build a flat pool of all available mastered atoms for fallback
     let fullPool = [];
-    mastered.forEach(s => s.atoms?.forEach(a => fullPool.push({ atomId: a, sessionId: s.session_id, strand: s.strand })));
+    mastered.forEach(s => {
+      if (s.atoms) {
+        s.atoms.forEach(aId => {
+          fullPool.push({ atomId: aId, sessionId: s.session_id, strand: s.strand });
+        });
+      }
+    });
 
     const fetchQ = async (atomId, sourceId, strand) => {
       const snap = await getDoc(doc(db, "master_atoms", atomId));
       if (snap.exists() && snap.data().retrieval_pool?.length > 0) {
         const pool = snap.data().retrieval_pool;
-        return { ...pool[Math.floor(Math.random() * pool.length)], sourceId, atomId, strand };
+        const randomQ = pool[Math.floor(Math.random() * pool.length)];
+        return { ...randomQ, sourceId, atomId, strand };
       }
       return null;
     };
 
+    // 3. Try to fill based on intervals (n-1, n-3, etc)
     for (const t of targets) {
       if (t <= 0) continue;
-      const matches = mastered.filter(s => s.session_id === t);
-      if (matches.length > 0) {
-        const s = matches[Math.floor(Math.random() * matches.length)];
-        const q = await fetchQ(s.atoms[Math.floor(Math.random() * s.atoms.length)], t, s.strand);
-        if (q) finalQuestions.push(q);
+      
+      const sessionMatches = mastered.filter(s => s.session_id === t);
+      if (sessionMatches.length > 0) {
+        // Pick a random session at this interval
+        const s = sessionMatches[Math.floor(Math.random() * sessionMatches.length)];
+        
+        // Find atoms in this session we haven't used yet
+        const availableAtoms = s.atoms.filter(aId => !usedAtomIds.has(aId));
+        
+        if (availableAtoms.length > 0) {
+          const chosenAtomId = availableAtoms[Math.floor(Math.random() * availableAtoms.length)];
+          const q = await fetchQ(chosenAtomId, t, s.strand);
+          if (q) {
+            finalQuestions.push(q);
+            usedAtomIds.add(chosenAtomId);
+          }
+        }
       }
     }
 
-    while (finalQuestions.length < 5 && fullPool.length > 0) {
-      const pick = fullPool[Math.floor(Math.random() * fullPool.length)];
-      if (finalQuestions.length >= 5) break; 
-      const q = await fetchQ(pick.atomId, pick.sessionId, pick.strand);
-      if (q) finalQuestions.push(q);
+    // 4. Fallback: If we have fewer than 5 questions, fill from the wider pool
+    // (Only choosing atoms we haven't picked yet)
+    let shuffledPool = fullPool.sort(() => 0.5 - Math.random());
+    
+    for (const item of shuffledPool) {
+      if (finalQuestions.length >= 5) break;
+      if (!usedAtomIds.has(item.atomId)) {
+        const q = await fetchQ(item.atomId, item.sessionId, item.strand);
+        if (q) {
+          finalQuestions.push(q);
+          usedAtomIds.add(item.atomId);
+        }
+      }
     }
+
     setRetrievalSet(finalQuestions);
   };
 
@@ -145,7 +179,7 @@ function App() {
   };
 
   const resetMasteryOnly = async () => {
-    const confirmReset = window.confirm("Reset all sessions to 'Untaught'? This will NOT delete your planning notes.");
+    const confirmReset = window.confirm("Reset all sessions to 'Untaught'? This will NOT delete your teacher notes.");
     if (!confirmReset) return;
     try {
       const updatePromises = sessions.map(s => updateDoc(doc(db, "master_sessions", s.id), { status: 'grey' }));
