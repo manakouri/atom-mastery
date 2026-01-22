@@ -1,6 +1,6 @@
 export const master_sessions = [
   // PHASE 1
-  { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognize 0-9 build all numbers.", atoms: ["PV-1.1"] },
+  { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognise 0-9 build all numbers.", atoms: ["PV-1.1"] },
   { session_id: 1, strand: "times_tables", title: "Equal Groups", li: "Identify equal vs unequal groups.", atoms: ["TT-1.1"] },
   { session_id: 2, strand: "place_value", title: "Zero as Placeholder", li: "Use 0 to hold a place in 10, 20, etc.", atoms: ["PV-1.3"] },
   { session_id: 2, strand: "times_tables", title: "Repeated Addition", li: "Write addition as multiplication.", atoms: ["TT-1.2"] },
@@ -12,7 +12,7 @@ export const master_sessions = [
   { session_id: 5, strand: "times_tables", title: "5x Table", li: "Connect 5s to the clock and 10s.", atoms: ["TT-1.6"] },
   { session_id: 6, strand: "place_value", title: "Number Lines to 100", li: "Place 2-digit numbers on a line.", atoms: ["PV-1.6"] },
   { session_id: 6, strand: "times_tables", title: "2x Table", li: "Understand doubling as 2x.", atoms: ["TT-1.7"] },
-  { session_id: 7, strand: "place_value", title: "Phase 1 Review", li: "Review 2-digit PV and 2,5,10 tables.", atoms: ["PV-1.1", "TT-1.7"] },
+  { session_id: 7, strand: "place_value", title: "Phase 1 Review", li: "Review 2-digit PV.", atoms: ["PV-1.1", "TT-1.7"] },
   { session_id: 7, strand: "times_tables", title: "Knowledge Test 1", li: "Test retrieval of Phase 1.", atoms: ["TT-1.5", "TT-1.6", "TT-1.7"] },
 
   // PHASE 2
@@ -28,7 +28,7 @@ export const master_sessions = [
   { session_id: 12, strand: "times_tables", title: "Inverse Intro", li: "Understand division as the opposite.", atoms: ["TT-2.5"] },
   { session_id: 13, strand: "place_value", title: "Magnitude", li: "Compare 3-digit numbers using < >.", atoms: ["PV-2.6"] },
   { session_id: 13, strand: "times_tables", title: "Fact Families", li: "Relate 3, 4, and 12 together.", atoms: ["TT-2.6"] },
-  { session_id: 14, strand: "place_value", title: "Phase 2 Review", li: "Review 3-digit PV and 3s.", atoms: ["PV-2.1", "PV-2.5"] },
+  { session_id: 14, strand: "place_value", title: "Phase 2 Review", li: "Review 3-digit PV.", atoms: ["PV-2.1", "PV-2.5"] },
   { session_id: 14, strand: "times_tables", title: "Knowledge Test 2", li: "Test retrieval of Phase 2.", atoms: ["TT-2.4", "TT-2.5"] },
 
   // PHASE 3
@@ -44,7 +44,7 @@ export const master_sessions = [
   { session_id: 19, strand: "times_tables", title: "Sharing vs Grouping", li: "Distinguish two types of division.", atoms: ["TT-3.5"] },
   { session_id: 20, strand: "place_value", title: "Round & Estimate", li: "Use rounding to check answers.", atoms: ["PV-3.6"] },
   { session_id: 20, strand: "times_tables", title: "Division Inverse", li: "Solve 32 ÷ 8 using 8x4.", atoms: ["TT-3.6"] },
-  { session_id: 21, strand: "place_value", title: "Phase 3 Review", li: "Review thousands and 4s/8s.", atoms: ["PV-3.2", "TT-3.3"] },
+  { session_id: 21, strand: "place_value", title: "Phase 3 Review", li: "Review thousands.", atoms: ["PV-3.2", "TT-3.3"] },
   { session_id: 21, strand: "times_tables", title: "Knowledge Test 3", li: "Test retrieval of Phase 3.", atoms: ["TT-3.4", "TT-3.6"] },
 
   // PHASE 4
@@ -60,7 +60,7 @@ export const master_sessions = [
   { session_id: 26, strand: "times_tables", title: "Distributive Intro", li: "Break 7x into 5x and 2x.", atoms: ["TT-4.5"] },
   { session_id: 27, strand: "place_value", title: "Comparing Magnitude", li: "Order 5-digit numbers.", atoms: ["PV-4.6"] },
   { session_id: 27, strand: "times_tables", title: "7x Table Mastery", li: "Use 5s+2s to solve 7s.", atoms: ["TT-4.6"] },
-  { session_id: 28, strand: "place_value", title: "Phase 4 Review", li: "Review 10k and 6,7,9 tables.", atoms: ["PV-4.2", "TT-4.5"] },
+  { session_id: 28, strand: "place_value", title: "Phase 4 Review", li: "Review 10k.", atoms: ["PV-4.2", "TT-4.5"] },
   { session_id: 28, strand: "times_tables", title: "Knowledge Test 4", li: "Test retrieval of Phase 4.", atoms: ["TT-4.2", "TT-4.6"] },
 
   // PHASE 5
