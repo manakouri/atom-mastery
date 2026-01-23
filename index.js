@@ -195,6 +195,33 @@ function App() {
     } catch (e) { console.error("Reset Error:", e); }
   };
 
+  const runBulkAtomUpdate = async () => {
+  // 1. Paste your data from the gem here
+  const newData = [
+    { id: "atom_1", type: "Fact", atom: "The symbol for 'plus' is +" },
+    { id: "atom_2", type: "Categorical", atom: "Identify the numerator" },
+    // ... add all your atoms here
+  ];
+
+  const confirmRun = window.confirm(`Ready to update ${newData.length} atoms in Firestore?`);
+  if (!confirmRun) return;
+
+  try {
+    for (const item of newData) {
+      const atomRef = doc(db, "master_atoms", item.id);
+      await updateDoc(atomRef, {
+        type: item.type,
+        atom: item.atom
+      });
+      console.log(`Updated: ${item.id}`);
+    }
+    alert("Bulk Update Complete!");
+  } catch (e) {
+    console.error("Bulk Update Error:", e);
+    alert("Update failed. Check console.");
+  }
+};
+
   const strands = [...new Set(sessions.map(s => s.strand))];
 
   if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Opening Roadmap...</div>;
@@ -232,6 +259,12 @@ function App() {
               <button onClick={startRetrieval} className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black px-8 py-4 rounded-2xl transition-all uppercase tracking-[0.2em] shadow-xl shadow-blue-200 active:scale-95">
                   Generate Retrieval
               </button>
+  <button 
+  onClick={runBulkAtomUpdate} 
+  className="px-5 py-4 rounded-2xl border-2 border-orange-200 text-orange-500 hover:bg-orange-50 transition-all text-[10px] font-black uppercase tracking-widest"
+>
+  Sync Atom Metadata
+</button>
             </div>
         </div>
       </div>
