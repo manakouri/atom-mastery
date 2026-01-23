@@ -1,6 +1,10 @@
 export const master_sessions = [
   // PHASE 1
-  { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognise 0-9 build all numbers.", atoms: ["PV-1.1"] },
+  { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognise 0-9 build all numbers.", atoms: ["PV-1.1"], conceptual_atoms: [
+      {atom: "There are only 10 digits in our system: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.", type: "Fact"},
+      {atom: "Identify each digit by its name and symbol.", type: "Categorical"},
+      {atom: "Recognise that any multi-digit number is built from these 10 symbols.", type: "Fact"}
+    ] },
   { session_id: 1, strand: "times_tables", title: "Equal Groups", li: "Identify equal vs unequal groups.", atoms: ["TT-1.1"] },
   { session_id: 2, strand: "place_value", title: "Zero as Placeholder", li: "Use 0 to hold a place in 10, 20, etc.", atoms: ["PV-1.3"] },
   { session_id: 2, strand: "times_tables", title: "Repeated Addition", li: "Write addition as multiplication.", atoms: ["TT-1.2"] },
