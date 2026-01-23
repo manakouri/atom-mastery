@@ -61,6 +61,12 @@ function App() {
   const [retrievalSet, setRetrievalSet] = useState([]);
   const [planningText, setPlanningText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const atomTypeStyles = {
+  Fact: "bg-blue-100 text-blue-700 border-blue-200",           // Blue
+  Categorical: "bg-green-100 text-green-700 border-green-200", // Green
+  Transformation: "bg-orange-100 text-orange-700 border-orange-200", // Orange
+  Routine: "bg-purple-100 text-purple-700 border-purple-200"   // Purple
+};
 
   useEffect(() => {
     async function fetchSessions() {
@@ -298,18 +304,33 @@ function App() {
                 <textarea value={planningText} onChange={(e) => setPlanningText(e.target.value)} placeholder="Type notes here..." className="w-full bg-white border-2 border-slate-100 rounded-2xl p-6 text-sm text-slate-700 h-48 focus:border-blue-400 outline-none transition-all shadow-sm" />
               </section>
 
-              <section className="space-y-6 pb-10">
-                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-3">Technical Breakdown</h4>
-                {atoms.map((atom, i) => (
-                    <div key={i} className="pl-6 border-l-4 border-slate-100 py-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="font-mono text-[10px] font-bold bg-white text-blue-600 px-2 py-1 rounded-lg border-2 border-blue-50">{atom.atom_id}</span>
-                            <h5 className="font-bold text-slate-800">{atom.title}</h5>
-                        </div>
-                        <p className="text-sm text-slate-500 leading-relaxed">{atom.description}</p>
-                    </div>
-                ))}
-              </section>
+            <section className="space-y-6 pb-10">
+  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-3">
+    Conceptual Atoms Breakdown
+  </h4>
+  
+  {atoms.length > 0 ? (
+    atoms.map((atom, i) => (
+      <div key={i} className="group pl-6 border-l-4 border-slate-100 hover:border-blue-400 py-2 transition-all">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          {/* THE TYPE BADGE */}
+          <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md border ${atomTypeStyles[atom.type] || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+            {atom.type || 'Atom'}
+          </span>
+          
+          <h5 className="font-bold text-slate-800 text-sm">{atom.title}</h5>
+        </div>
+        
+        {/* THE ATOM DESCRIPTION */}
+        <p className="text-sm text-slate-500 leading-relaxed">
+          {atom.atom || atom.description}
+        </p>
+      </div>
+    ))
+  ) : (
+    <div className="text-slate-400 text-xs italic">No atoms loaded for this session.</div>
+  )}
+</section>
             </div>
           </div>
         </div>
