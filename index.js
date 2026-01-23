@@ -197,9 +197,90 @@ function App() {
 
   const runBulkAtomUpdate = async () => {
   // 1. Paste your data from the gem here
-  const newData = [
-    { id: "atom_1", type: "Fact", atom: "The symbol for 'plus' is +" },
-    { id: "atom_2", type: "Categorical", atom: "Identify the numerator" },
+  const master_sessions = [
+    { session_id: 1, strand: "place_value", title: "The 10 Symbols", li: "Recognise 0-9 build all numbers.", atoms: ["PV-1.1"], 
+  conceptual_atoms: [
+      {"atom": "There are only 10 digits in our system: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.", "type": "Fact"},
+      {"atom": "Identify each digit by its name and symbol.", "type": "Categorical"},
+      {"atom": "Recognise that any multi-digit number is built from these 10 symbols.", "type": "Fact"}
+    ]},
+  { session_id: 1, strand: "times_tables", title: "Equal Groups", li: "Identify equal vs unequal groups.", atoms: ["TT-1.1"] },
+  { session_id: 2, strand: "place_value", title: "Zero as Placeholder", li: "Use 0 to hold a place in 10, 20, etc.", atoms: ["PV-1.3"] },
+  { session_id: 2, strand: "times_tables", title: "Repeated Addition", li: "Write addition as multiplication.", atoms: ["TT-1.2"] },
+  { session_id: 3, strand: "place_value", title: "Unitizing Tens", li: "Bundle 10 ones into 1 ten.", atoms: ["PV-1.4"] },
+  { session_id: 3, strand: "times_tables", title: "The Array", li: "Represent multiplication as a grid.", atoms: ["TT-1.4"] },
+  { session_id: 4, strand: "place_value", title: "Counting 10s", li: "Count fluently in tens to 100.", atoms: ["PV-1.5"] },
+  { session_id: 4, strand: "times_tables", title: "10x Table", li: "Master the 10s using the '0' rule.", atoms: ["TT-1.5"] },
+  { session_id: 5, strand: "place_value", title: "2-Digit Composition", li: "Partition numbers into Tens and Ones.", atoms: ["PV-1.2"] },
+  { session_id: 5, strand: "times_tables", title: "5x Table", li: "Connect 5s to the clock and 10s.", atoms: ["TT-1.6"] },
+  { session_id: 6, strand: "place_value", title: "Number Lines to 100", li: "Place 2-digit numbers on a line.", atoms: ["PV-1.6"] },
+  { session_id: 6, strand: "times_tables", title: "2x Table", li: "Understand doubling as 2x.", atoms: ["TT-1.7"] },
+  { session_id: 7, strand: "place_value", title: "Phase 1 Review", li: "Review 2-digit PV.", atoms: ["PV-1.1", "TT-1.7"] },
+  { session_id: 7, strand: "times_tables", title: "Knowledge Test 1", li: "Test retrieval of Phase 1.", atoms: ["TT-1.5", "TT-1.6", "TT-1.7"] },
+
+  // PHASE 2
+  { session_id: 8, strand: "place_value", title: "The Hundred Flat", li: "10 tens make 1 hundred.", atoms: ["PV-2.1"] },
+  { session_id: 8, strand: "times_tables", title: "Commutativity", li: "Understand 5x2 is the same as 2x5.", atoms: ["TT-2.1"] },
+  { session_id: 9, strand: "place_value", title: "3-Digit Composition", li: "Build H, T, and O.", atoms: ["PV-2.2"] },
+  { session_id: 9, strand: "times_tables", title: "3x Table Intro", li: "Skip count in 3s fluently.", atoms: ["TT-2.2"] },
+  { session_id: 10, strand: "place_value", title: "Crossing 100", li: "Bridge the 100 barrier (99 to 101).", atoms: ["PV-2.3"] },
+  { session_id: 10, strand: "times_tables", title: "3x Table Patterns", li: "Identify even/odd patterns in 3s.", atoms: ["TT-2.3"] },
+  { session_id: 11, strand: "place_value", title: "Midpoints to 100", li: "Find 50 as the halfway mark.", atoms: ["PV-2.4"] },
+  { session_id: 11, strand: "times_tables", title: "3x Fluency", li: "Rapid recall of 3x table.", atoms: ["TT-2.4"] },
+  { session_id: 12, strand: "place_value", title: "Internal Zeros", li: "Write numbers like 104 and 308.", atoms: ["PV-2.5"] },
+  { session_id: 12, strand: "times_tables", title: "Inverse Intro", li: "Understand division as the opposite.", atoms: ["TT-2.5"] },
+  { session_id: 13, strand: "place_value", title: "Magnitude", li: "Compare 3-digit numbers using < >.", atoms: ["PV-2.6"] },
+  { session_id: 13, strand: "times_tables", title: "Fact Families", li: "Relate 3, 4, and 12 together.", atoms: ["TT-2.6"] },
+  { session_id: 14, strand: "place_value", title: "Phase 2 Review", li: "Review 3-digit PV.", atoms: ["PV-2.1", "PV-2.5"] },
+  { session_id: 14, strand: "times_tables", title: "Knowledge Test 2", li: "Test retrieval of Phase 2.", atoms: ["TT-2.4", "TT-2.5"] },
+
+  // PHASE 3
+  { session_id: 15, strand: "place_value", title: "The Thousand Cube", li: "10 hundreds make 1 thousand.", atoms: ["PV-3.1"] },
+  { session_id: 15, strand: "times_tables", title: "The Double-Double", li: "Double 2s to find 4s.", atoms: ["TT-3.1"] },
+  { session_id: 16, strand: "place_value", title: "4-Digit Reading", li: "Read thousands with commas.", atoms: ["PV-3.2"] },
+  { session_id: 16, strand: "times_tables", title: "4x Table Practice", li: "Fluency with 4x table.", atoms: ["TT-3.2"] },
+  { session_id: 17, strand: "place_value", title: "Midpoints to 1000", li: "Find 500 as the halfway mark.", atoms: ["PV-3.3"] },
+  { session_id: 17, strand: "times_tables", title: "Doubling 4s to 8s", li: "Double 4s to find 8s.", atoms: ["TT-3.3"] },
+  { session_id: 18, strand: "place_value", title: "Rounding to 10", li: "Use midpoints to round to 10.", atoms: ["PV-3.4"] },
+  { session_id: 18, strand: "times_tables", title: "8x Table Mastery", li: "Recall 8x facts using doubling.", atoms: ["TT-3.4"] },
+  { session_id: 19, strand: "place_value", title: "Rounding to 100", li: "Use midpoints to round to 100.", atoms: ["PV-3.5"] },
+  { session_id: 19, strand: "times_tables", title: "Sharing vs Grouping", li: "Distinguish two types of division.", atoms: ["TT-3.5"] },
+  { session_id: 20, strand: "place_value", title: "Round & Estimate", li: "Use rounding to check answers.", atoms: ["PV-3.6"] },
+  { session_id: 20, strand: "times_tables", title: "Division Inverse", li: "Solve 32 ÷ 8 using 8x4.", atoms: ["TT-3.6"] },
+  { session_id: 21, strand: "place_value", title: "Phase 3 Review", li: "Review thousands.", atoms: ["PV-3.2", "TT-3.3"] },
+  { session_id: 21, strand: "times_tables", title: "Knowledge Test 3", li: "Test retrieval of Phase 3.", atoms: ["TT-3.4", "TT-3.6"] },
+
+  // PHASE 4
+  { session_id: 22, strand: "place_value", title: "10,000 Threshold", li: "10 thousands make 1 ten-thousand.", atoms: ["PV-4.1"] },
+  { session_id: 22, strand: "times_tables", title: "Double-3 Strategy", li: "Double 3s to find 6s.", atoms: ["TT-4.1"] },
+  { session_id: 23, strand: "place_value", title: "5-Digit Composition", li: "Read and write up to 99,999.", atoms: ["PV-4.2"] },
+  { session_id: 23, strand: "times_tables", title: "6x Table Fluency", li: "Practice recall of 6x facts.", atoms: ["TT-4.2"] },
+  { session_id: 24, strand: "place_value", title: "Rounding to 1,000", li: "Round 4- and 5-digit numbers to nearest 1,000.", atoms: ["PV-4.3"] },
+  { session_id: 24, strand: "times_tables", title: "10 minus 1 (9s)", li: "Find 9x by (10x - 1x).", atoms: ["TT-4.3"] },
+  { session_id: 25, strand: "place_value", title: "Placeholder Zeros", li: "Compare 50,200 vs 5,020.", atoms: ["PV-4.4"] },
+  { session_id: 25, strand: "times_tables", title: "9x Table Patterns", li: "Digital roots of 9s.", atoms: ["TT-4.4"] },
+  { session_id: 26, strand: "place_value", title: "Scaling Rounding", li: "Round 12,450 to 10, 100, 1000.", atoms: ["PV-4.5"] },
+  { session_id: 26, strand: "times_tables", title: "Distributive Intro", li: "Break 7x into 5x and 2x.", atoms: ["TT-4.5"] },
+  { session_id: 27, strand: "place_value", title: "Comparing Magnitude", li: "Order 5-digit numbers.", atoms: ["PV-4.6"] },
+  { session_id: 27, strand: "times_tables", title: "7x Table Mastery", li: "Use 5s+2s to solve 7s.", atoms: ["TT-4.6"] },
+  { session_id: 28, strand: "place_value", title: "Phase 4 Review", li: "Review 10k.", atoms: ["PV-4.2", "TT-4.5"] },
+  { session_id: 28, strand: "times_tables", title: "Knowledge Test 4", li: "Test retrieval of Phase 4.", atoms: ["TT-4.2", "TT-4.6"] },
+
+  // PHASE 5
+  { session_id: 29, strand: "place_value", title: "100,000 Unit", li: "Understand 10 groups of 10,000.", atoms: ["PV-5.1"] },
+  { session_id: 29, strand: "times_tables", title: "10 + 1 (11s)", li: "Master 11s using 10x plus 1x.", atoms: ["TT-5.1"] },
+  { session_id: 30, strand: "place_value", title: "The Million", li: "Identify 1,000,000 as a landmark.", atoms: ["PV-5.2"] },
+  { session_id: 30, strand: "times_tables", title: "11x Mastery", li: "Recall 11x facts beyond 100.", atoms: ["TT-5.2"] },
+  { session_id: 31, strand: "place_value", title: "6-Digit Reading", li: "Read numbers with two commas.", atoms: ["PV-5.3"] },
+  { session_id: 31, strand: "times_tables", title: "10 + 2 (12s)", li: "Master 12s using 10x plus 2x.", atoms: ["TT-5.3"] },
+  { session_id: 32, strand: "place_value", title: "Rounding to 100,000", li: "Use the 50,000 midpoint.", atoms: ["PV-5.4"] },
+  { session_id: 32, strand: "times_tables", title: "12x Fluency", li: "Rapid recall of 12x facts.", atoms: ["TT-5.4"] },
+  { session_id: 33, strand: "place_value", title: "Order to 1,000,000", li: "Compare and order 6-digit numbers.", atoms: ["PV-5.5"] },
+  { session_id: 33, strand: "times_tables", title: "Zero Product Law", li: "Understand n x 0 is always 0.", atoms: ["TT-5.5"] },
+  { session_id: 34, strand: "place_value", title: "Full System Review", li: "Review Ones to Millions.", atoms: ["PV-5.1", "PV-5.2"] },
+  { session_id: 34, strand: "times_tables", title: "Distributive Mastery", li: "Apply strategy to 14x, 15x, etc.", atoms: ["TT-5.6"] },
+  { session_id: 35, strand: "place_value", title: "Final Review", li: "Cumulative PV Review.", atoms: ["PV-5.3"] },
+  { session_id: 35, strand: "times_tables", title: "Knowledge Test 5", li: "Final 12x12 Mastery Test.", atoms: ["TT-5.4", "TT-5.6"] }
     // ... add all your atoms here
   ];
 
